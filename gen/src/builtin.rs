@@ -352,11 +352,11 @@ pub(super) fn write(out: &mut OutFile) {
         writeln!(out, "template <>");
         writeln!(out, "class impl<Error> final {{");
         writeln!(out, "public:");
-        writeln!(out, "  static Error error(repr::PtrLen repr) noexcept {{");
+        writeln!(out, "  static void error(const char* msg, size_t len) {{");
         writeln!(out, "    Error error;");
-        writeln!(out, "    error.msg = static_cast<char const *>(repr.ptr);");
-        writeln!(out, "    error.len = repr.len;");
-        writeln!(out, "    return error;");
+        writeln!(out, "    error.msg = msg;");
+        writeln!(out, "    error.len = len;");
+        writeln!(out, "    throw error;");
         writeln!(out, "  }}");
         writeln!(out, "}};");
     }
@@ -395,6 +395,15 @@ pub(super) fn write(out: &mut OutFile) {
     }
 
     out.end_block(Block::AnonymousNamespace);
+
+    if builtin.rust_error {
+        out.next_section();
+        writeln!(
+            out,
+            "inline void (*throw_rust_error)(const char*, size_t) = impl<Error>::error;"
+        );
+    }
+
     out.end_block(Block::InlineNamespace("cxxbridge1"));
 
     if builtin.trycatch {
