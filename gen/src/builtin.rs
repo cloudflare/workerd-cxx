@@ -346,21 +346,7 @@ pub fn write(out: &mut OutFile) {
         }
         writeln!(out, "}};");
     }
-
-    if builtin.rust_error {
-        out.next_section();
-        writeln!(out, "template <>");
-        writeln!(out, "class impl<Error> final {{");
-        writeln!(out, "public:");
-        writeln!(out, "  static Error error(repr::PtrLen repr) noexcept {{");
-        writeln!(out, "    Error error;");
-        writeln!(out, "    error.msg = static_cast<char const *>(repr.ptr);");
-        writeln!(out, "    error.len = repr.len;");
-        writeln!(out, "    return error;");
-        writeln!(out, "  }}");
-        writeln!(out, "}};");
-    }
-
+    
     if builtin.destroy {
         out.next_section();
         writeln!(out, "template <typename T>");

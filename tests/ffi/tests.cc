@@ -3,6 +3,7 @@
 #include <array>
 #include <cstdlib>
 #include <cstring>
+#include <exception>
 #include <iterator>
 #include <memory>
 #include <numeric>
@@ -763,6 +764,22 @@ std::unique_ptr<::F::F> c_return_ns_opaque_ptr() {
   return f;
 }
 
+struct TestException : public std::exception {
+  TestException(std::string&& msg) : message(std::move(msg)) {}
+
+  static void do_throw(const char* msg, size_t len) {
+    auto str = std::string(msg, len);
+    delete[] msg;
+    throw TestException(std::move(str));
+  }
+
+  const char* what() const noexcept override {
+    return message.c_str();
+  }
+
+  std::string message;
+};
+
 extern "C" const char *cxx_run_test() noexcept {
 #define STRINGIFY(x) #x
 #define TOSTRING(x) STRINGIFY(x)
@@ -988,6 +1005,17 @@ extern "C" const char *cxx_run_test() noexcept {
   } catch (const rust::Error &e) {
     ASSERT(std::strcmp(e.what(), "panic in cxx_test_suite::ffi::r_panic: foobar") == 0);
   }
+
+  // Test custom exception handler
+  auto prev_handler = ::rust::throw_rust_error;
+  ::rust::throw_rust_error = TestException::do_throw;
+    try {
+    r_fail_return_primitive();
+    ASSERT(false);
+  } catch (const TestException &e) {
+    ASSERT(std::strcmp(e.what(), "rust error") == 0);
+  }
+  ::rust::throw_rust_error = prev_handler;
 
   cxx_test_suite_set_correct();
   return nullptr;

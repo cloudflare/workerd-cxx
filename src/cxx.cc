@@ -86,6 +86,8 @@ void panic [[noreturn]] (const char *msg) {
 
 template void panic<std::out_of_range> [[noreturn]] (const char *msg);
 
+void (*throw_rust_error)(const char*, size_t) = Error::error; // NOLINT
+
 template <typename T>
 static bool is_aligned(const void *ptr) noexcept {
   auto iptr = reinterpret_cast<std::uintptr_t>(ptr);
@@ -511,6 +513,13 @@ Error &Error::operator=(Error &&other) & noexcept {
 }
 
 const char *Error::what() const noexcept { return this->msg; }
+
+void Error::error(const char *ptr, std::size_t len) {
+  Error error;
+  error.msg = ptr;
+  error.len = len;
+  throw error;
+}
 
 namespace {
 template <typename T>

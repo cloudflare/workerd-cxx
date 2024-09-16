@@ -42,6 +42,11 @@ template <typename T>
 class impl;
 }
 
+// Global handler for rust errors.
+// msg is 0-terminated, size counts the 0.
+// msg was new char[] allocated, ownership is transferred to throw_rust_error.
+extern void (*throw_rust_error)(const char *msg, size_t size); // NOLINT
+
 #ifndef CXXBRIDGE1_RUST_STRING
 #define CXXBRIDGE1_RUST_STRING
 // https://cxx.rs/binding/string.html
@@ -435,6 +440,9 @@ public:
   Error &operator=(Error &&) & noexcept;
 
   const char *what() const noexcept override;
+
+  // Default handler for throw_rust_error: create new Error instance and throw it.
+  static void error(const char *, size_t);
 
 private:
   Error() noexcept = default;
