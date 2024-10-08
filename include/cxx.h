@@ -30,6 +30,10 @@ template <typename T>
 class impl;
 }
 
+// msg is 0-terminated, size counts the 0.
+// msg was new char[] allocated, ownership is transferred to throw_rust_error.
+extern void (*throw_rust_error)(const char* msg, size_t size);
+
 #ifndef CXXBRIDGE1_RUST_STRING
 #define CXXBRIDGE1_RUST_STRING
 // https://cxx.rs/binding/string.html
