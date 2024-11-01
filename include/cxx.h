@@ -20,6 +20,10 @@
 #include <sys/types.h>
 #endif
 
+#ifndef __WORKERD_CXX__
+#define __WORKERD_CXX__
+#endif
+
 namespace rust {
 inline namespace cxxbridge1 {
 
