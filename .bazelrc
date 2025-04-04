@@ -6,9 +6,11 @@
 ###############################################################################
 
 build --enable_platform_specific_config
-build:linux --@rules_rust//:extra_rustc_flags=-Clink-arg=-fuse-ld=lld
-build:linux --cxxopt=-std=c++17
-build:macos --cxxopt=-std=c++17
+build --cxxopt=-std=c++20
+
+build --action_env=CC=clang-20
+build --action_env=CXX=clang-20
+test --action_env=RUST_BACKTRACE=1
 
 ###############################################################################
 ## Custom user flags

@@ -1,6 +1,6 @@
 /.buckd
 /bazel-bin
-/bazel-cxx
+/bazel-workerd-cxx
 /bazel-out
 /bazel-testlogs
 /user.bazelrc

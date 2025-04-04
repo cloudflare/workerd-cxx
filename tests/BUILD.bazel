@@ -25,6 +25,7 @@ rust_library(
     deps = [
         ":impl",
         "//:cxx",
+        "@kj-rs//src/foo:kj-rs",
     ],
 )
 
@@ -42,6 +43,8 @@ cc_library(
         ":bridge/include",
         ":module/include",
         "//:core",
+        "@capnp-cpp//src/kj:kj-async",
+        "@kj-rs//src:cxx-dep",
     ],
 )
 

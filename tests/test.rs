@@ -409,3 +409,9 @@ fn test_unwind_safe() {
     fn require_ref_unwind_safe<T: RefUnwindSafe>() {}
     require_ref_unwind_safe::<ffi::C>();
 }
+
+#[test]
+fn test_c_async_fn() {
+    let fut = ffi::c_async_fn();
+    todo!("{:?}", fut);
+}

@@ -2,6 +2,7 @@
 #include "rust/cxx.h"
 #include <memory>
 #include <string>
+#include <kj/async.h>
 
 namespace A {
 struct AShared;
@@ -214,6 +215,8 @@ std::unique_ptr<::F::F> c_return_ns_opaque_ptr();
 
 rust::String cOverloadedFunction(int32_t x);
 rust::String cOverloadedFunction(rust::Str x);
+
+kj::Promise<void> c_async_fn();
 
 } // namespace tests
 

@@ -219,6 +219,8 @@ pub mod ffi {
 
         #[namespace = "other"]
         fn ns_c_take_ns_shared(shared: AShared);
+    
+        async fn c_async_fn() -> impl Future<Output = ()>;
     }
 
     extern "C++" {
