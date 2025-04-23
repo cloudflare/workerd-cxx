@@ -10,6 +10,9 @@ build:linux --@rules_rust//:extra_rustc_flags=-Clink-arg=-fuse-ld=lld
 build:linux --cxxopt=-std=c++17
 build:macos --cxxopt=-std=c++17
 
+build:clippy --aspects=@rules_rust//rust:defs.bzl%rust_clippy_aspect
+build:clippy --output_groups=+clippy_checks
+
 ###############################################################################
 ## Custom user flags
 ##
