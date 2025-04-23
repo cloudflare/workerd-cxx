@@ -9,7 +9,7 @@ publish = false
 path = "lib.rs"
 
 [dependencies]
-cxx = { path = "../..", default-features = false }
+cxx = { path = "../..", default-features = true }
 
 [build-dependencies]
 cxx-build = { path = "../../gen/build" }

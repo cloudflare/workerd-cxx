@@ -11,9 +11,12 @@ fn main() {
     CFG.include_prefix = "tests/ffi";
     let sources = vec!["lib.rs", "module.rs"];
     let mut build = cxx_build::bridges(sources);
+    build.compiler("/usr/bin/clang-20");
     build.file("tests.cc");
-    build.std(cxxbridge_flags::STD);
+    build.std("c++20");
     build.warnings_into_errors(cfg!(deny_warnings));
+    build.include("/home/maizatskyi/src/github.com/capnproto/kj-rs/src/");
+    build.include("/home/maizatskyi/src/github.com/capnproto/capnproto/c++/src/");
     if cfg!(not(target_env = "msvc")) {
         build.define("CXX_TEST_INSTANTIATIONS", None);
     }
