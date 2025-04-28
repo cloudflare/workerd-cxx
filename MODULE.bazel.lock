@@ -151,7 +151,7 @@
   "moduleExtensions": {
     "//:capnp_cpp.bzl%capnp_cpp": {
       "general": {
-        "bzlTransitiveDigest": "Tj5FLYNsR+Tywz1pVhZ0g0QfUj7lg76n299YmeqXLYw=",
+        "bzlTransitiveDigest": "tqp8PD7PlIMw+hub/Gbb35YemjvGP2zQXuqcFPcY4r8=",
         "usagesDigest": "NcY49Lqyy8czgriyQfqodZtzPlf0EyttkWX8b7osJtY=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -160,10 +160,10 @@
           "capnp-cpp": {
             "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_archive",
             "attributes": {
-              "url": "https://github.com/capnproto/capnproto/tarball/ff191c66c2bbff428c10923b5d4032087b592fe0",
-              "strip_prefix": "capnproto-capnproto-ff191c6/c++",
+              "url": "https://github.com/capnproto/capnproto/tarball/fd3001e9ae9c8efaa007518901711ead5584167a",
+              "strip_prefix": "capnproto-capnproto-fd3001e/c++",
               "type": "tgz",
-              "sha256": "0d332fb8ce5909fa605b6ed0e5b97705f163a649f11b5d136c27efb4943ebc9f"
+              "sha256": "ce4d082c20f2df051d718a3a72fc6029e84c589c87bc93b8cfeb79522577e822"
             }
           }
         },
@@ -178,7 +178,7 @@
     },
     "//:kj_rs.bzl%kj_rs": {
       "general": {
-        "bzlTransitiveDigest": "lOTr0Q8I5jSA0+OQznPezP/5M/TfXZUsli5BTrJcra8=",
+        "bzlTransitiveDigest": "6qv97UeRssDS3bwyChmQzcPXTHNqXn/IO66gX+YGOTc=",
         "usagesDigest": "i4qPUkFCBnVGxO5z1YTkKwFHEUEo7PY7LZjorEsd52k=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -187,10 +187,10 @@
           "kj-rs": {
             "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_archive",
             "attributes": {
-              "url": "https://github.com/capnproto/kj-rs/tarball/df8a25bb2c4d3c4e361d84011a6eac640b278b92",
-              "strip_prefix": "capnproto-kj-rs-df8a25b",
+              "url": "https://github.com/capnproto/kj-rs/tarball/9fc9de649bbf9832d343cebc1c6cb84f47191f77",
+              "strip_prefix": "capnproto-kj-rs-9fc9de6",
               "type": "tgz",
-              "sha256": "d38626cbae30443fef4d009f18c5dad1af3da342f8275a6e833c1691bbb090cc"
+              "sha256": "25513ed21ca27471520e65fb126dca2ceff50c3d06e3056005febc28ee39e408"
             }
           }
         },
