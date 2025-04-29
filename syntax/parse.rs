@@ -5,9 +5,9 @@ use crate::syntax::file::{Item, ItemForeignMod};
 use crate::syntax::report::Errors;
 use crate::syntax::Atom::*;
 use crate::syntax::{
-    attrs, error, Api, Array, Derive, Doc, Enum, EnumRepr, ExternFn, ExternType, ForeignName, Impl,
-    Include, IncludeKind, Lang, Lifetimes, NamedType, Namespace, Pair, Ptr, Receiver, Ref,
-    Signature, SliceRef, Struct, Ty1, Type, TypeAlias, Var, Variant,
+    attrs, error, Api, Array, Derive, Doc, Enum, EnumRepr, ExternFn, ExternType, ForeignName,
+    Future, Impl, Include, IncludeKind, Lang, Lifetimes, NamedType, Namespace, Pair, Ptr, Receiver,
+    Ref, Signature, SliceRef, Struct, Ty1, Type, TypeAlias, Var, Variant,
 };
 use proc_macro2::{Delimiter, Group, Span, TokenStream, TokenTree};
 use quote::{format_ident, quote, quote_spanned};
@@ -18,13 +18,15 @@ use syn::{
     Abi, Attribute, Error, Expr, Fields, FnArg, ForeignItem, ForeignItemFn, ForeignItemType,
     GenericArgument, GenericParam, Generics, Ident, ItemEnum, ItemImpl, ItemStruct, Lit, LitStr,
     Pat, PathArguments, Result, ReturnType, Signature as RustSignature, Token, TraitBound,
-    TraitBoundModifier, Type as RustType, TypeArray, TypeBareFn, TypeParamBound, TypePath, TypePtr,
-    TypeReference, Variant as RustVariant, Visibility,
+    TraitBoundModifier, Type as RustType, TypeArray, TypeBareFn, TypeParamBound,
+    TypePath, TypePtr, TypeReference, Variant as RustVariant, Visibility,
 };
 
 pub(crate) mod kw {
     syn::custom_keyword!(Pin);
     syn::custom_keyword!(Result);
+    syn::custom_keyword!(Output);
+    syn::custom_keyword!(Future);
 }
 
 pub(crate) fn parse_items(
@@ -559,16 +561,6 @@ fn parse_extern_fn(
         ));
     }
 
-    if foreign_fn.sig.asyncness.is_some() && !cfg!(feature = "experimental-async-fn") {
-        return Err(Error::new_spanned(
-            foreign_fn,
-            "async function is not directly supported yet, but see https://cxx.rs/async.html \
-            for a working approach, and https://github.com/pcwalton/cxx-async for some helpers; \
-            eventually what you wrote will work but it isn't integrated into the cxx::bridge \
-            macro yet",
-        ));
-    }
-
     if foreign_fn.sig.constness.is_some() {
         return Err(Error::new_spanned(
             foreign_fn,
@@ -1075,6 +1067,7 @@ fn parse_impl(cx: &mut Errors, imp: ItemImpl) -> Result<Api> {
         | Type::Void(_)
         | Type::SliceRef(_)
         | Type::Array(_) => Lifetimes::default(),
+        Type::Future(_) => todo!(),
     };
 
     let negative = negative_token.is_some();
@@ -1146,6 +1139,17 @@ fn parse_type(ty: &RustType) -> Result<Type> {
         RustType::Array(ty) => parse_type_array(ty),
         RustType::BareFn(ty) => parse_type_fn(ty),
         RustType::Tuple(ty) if ty.elems.is_empty() => Ok(Type::Void(ty.paren_token.span.join())),
+        RustType::ImplTrait(ty) => {
+            let bounds = &ty.bounds;
+            if bounds.len() != 1 {
+                return Err(Error::new_spanned(ty, "unsupported type"));
+            }
+            let bound = &bounds[0];
+            match bound {
+                TypeParamBound::Trait(tb) => parse_trait_path(&tb.path),
+                _ => Err(Error::new_spanned(ty, "unsupported type")),
+            }
+        }
         _ => Err(Error::new_spanned(ty, "unsupported type")),
     }
 }
@@ -1473,6 +1477,56 @@ fn parse_return_type(
     }
 }
 
+fn parse_trait_path(p: &syn::Path) -> Result<Type> {
+    if p.segments.len() != 1 {
+        return Err(Error::new_spanned(p, "unsupported type: segments.len != 1"));
+    }
+    let segment = &p.segments[0];
+    if segment.ident != "Future" {
+        return Err(Error::new_spanned(
+            segment,
+            "unsupported type: not a Future",
+        ));
+    }
+
+    match &segment.arguments {
+        PathArguments::AngleBracketed(ab) => {
+            if ab.args.len() != 1 {
+                return Err(Error::new_spanned(
+                    segment,
+                    "unsupported type: ab.args.len() != 1",
+                ));
+            }
+            let arg = &ab.args[0];
+            match arg {
+                GenericArgument::AssocType(ty) => {
+                    if ty.generics.is_some() {
+                        return Err(Error::new_spanned(
+                            arg,
+                            "unsupported type: ty.generics.is_some()",
+                        ));
+                    }
+                    if ty.ident != "Output" {
+                        return Err(Error::new_spanned(
+                            &ty.ident,
+                            "unsupported type: Output expected",
+                        ));
+                    }
+                    let output = parse_type(&ty.ty)?;
+                    return Ok(Type::Future(Box::new(Future { output })));
+                }
+                _ => return Err(Error::new_spanned(arg, "unsupported type: bad argument")),
+            }
+        }
+        _ => {
+            return Err(Error::new_spanned(
+                segment,
+                "unsupported type: bad arguments",
+            ))
+        }
+    }
+}
+
 fn has_references_without_lifetime(ty: &Type) -> bool {
     match ty {
         Type::Fn(_) | Type::Ident(_) | Type::Str(_) | Type::Void(_) => false,
@@ -1486,6 +1540,7 @@ fn has_references_without_lifetime(ty: &Type) -> bool {
         Type::Array(t) => has_references_without_lifetime(&t.inner),
         Type::SliceRef(t) => t.lifetime.is_none(),
         Type::Ref(t) => t.lifetime.is_none(),
+        Type::Future(t) => has_references_without_lifetime(&t.output),
     }
 }
 
