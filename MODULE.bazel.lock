@@ -178,19 +178,16 @@
     },
     "//:kj_rs.bzl%kj_rs": {
       "general": {
-        "bzlTransitiveDigest": "QqtYO6IakVoX/iOBbmUYX/u9dsJcMq1BZep1J8MqmgU=",
+        "bzlTransitiveDigest": "c4n+pMEQgBpEyIFj5r54djLzGhUbS3renY+gu8sTDXA=",
         "usagesDigest": "i4qPUkFCBnVGxO5z1YTkKwFHEUEo7PY7LZjorEsd52k=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
         "generatedRepoSpecs": {
           "kj-rs": {
-            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_archive",
+            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:local.bzl%local_repository",
             "attributes": {
-              "url": "https://github.com/capnproto/kj-rs/tarball/13f2152e0cca109b0c64f9eeca4f62bcf0689a87",
-              "strip_prefix": "capnproto-kj-rs-13f2152",
-              "type": "tgz",
-              "sha256": "bcd3b2b22a422936bebb5fcefa56eb7d4fa076e329fb6214683c4d6b5e7ec4c3"
+              "path": "/home/maizatskyi/src/github.com/capnproto/kj-rs"
             }
           }
         },

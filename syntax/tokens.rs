@@ -226,7 +226,7 @@ impl ToTokens for Future {
         tokens.extend(
             quote_spanned!(self.output.span()=> impl ::std::future::Future<Output = ::std::result::Result<#output, ::cxx::Exception>>),
         );
-    }
+}
 }
 
 impl ToTokens for Impl {
