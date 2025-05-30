@@ -106,6 +106,9 @@ fn expand(ffi: Module, doc: Doc, attrs: OtherAttrs, apis: &[Api], types: &Types)
             ImplKey::UniquePtr(ident) => {
                 expanded.extend(expand_unique_ptr(ident, types, explicit_impl));
             }
+            ImplKey::KjOwn(ident) => {
+                expanded.extend(expand_kj_own(ident, types, explicit_impl));
+            }
             ImplKey::SharedPtr(ident) => {
                 expanded.extend(expand_shared_ptr(ident, types, explicit_impl));
             }
@@ -1547,6 +1550,14 @@ fn expand_unique_ptr(
             }
         }
     }
+}
+
+fn expand_kj_own(
+    key: NamedImplKey,
+    types: &Types,
+    explicit_impl: Option<&Impl>,
+) -> TokenStream {
+    todo!("kj::Own bindings")
 }
 
 fn expand_shared_ptr(

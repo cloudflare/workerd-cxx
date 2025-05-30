@@ -6,6 +6,8 @@
 
 namespace kj_rs {
 
+struct CppType;
+
 kj::Promise<void> c_async_void_fn();
 kj::Promise<int64_t> c_async_int_fn();
 kj::Promise<Shared> c_async_struct_fn();

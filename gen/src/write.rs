@@ -223,7 +223,7 @@ fn pick_includes_and_builtins(out: &mut OutFile, apis: &[Api]) {
             Type::SliceRef(_) => out.builtin.rust_slice = true,
             Type::Array(_) => out.include.array = true,
             Type::Ref(_) | Type::Void(_) | Type::Ptr(_) => {}
-            Type::Future(_) => out.include.kj_rs = true,
+            Type::Future(_) | Type::KjOwn(_) => out.include.kj_rs = true,
         }
     }
 }
@@ -1222,6 +1222,11 @@ fn write_type(out: &mut OutFile, ty: &Type) {
             write_type(out, &ptr.inner);
             write!(out, ">");
         }
+        Type::KjOwn(ptr) => {
+            write!(out, "::kj::Own<");
+            write_type(out, &ptr.inner);
+            write!(out, ">");
+        }
         Type::SharedPtr(ptr) => {
             write!(out, "::std::shared_ptr<");
             write_type(out, &ptr.inner);
@@ -1322,6 +1327,7 @@ fn write_space_after_type(out: &mut OutFile, ty: &Type) {
         Type::Ident(_)
         | Type::RustBox(_)
         | Type::UniquePtr(_)
+        | Type::KjOwn(_)
         | Type::SharedPtr(_)
         | Type::WeakPtr(_)
         | Type::Str(_)
@@ -1398,6 +1404,7 @@ fn write_generic_instantiations(out: &mut OutFile) {
             ImplKey::RustBox(ident) => write_rust_box_extern(out, ident),
             ImplKey::RustVec(ident) => write_rust_vec_extern(out, ident),
             ImplKey::UniquePtr(ident) => write_unique_ptr(out, ident),
+            ImplKey::KjOwn(ident) => write_kj_own(out, ident),
             ImplKey::SharedPtr(ident) => write_shared_ptr(out, ident),
             ImplKey::WeakPtr(ident) => write_weak_ptr(out, ident),
             ImplKey::CxxVector(ident) => write_cxx_vector(out, ident),
@@ -1607,6 +1614,10 @@ fn write_rust_vec_impl(out: &mut OutFile, key: NamedImplKey) {
         instance,
     );
     writeln!(out, "}}");
+}
+
+fn write_kj_own(out: &mut OutFile, key: NamedImplKey) {
+    todo!("kj_own cxx codegen")
 }
 
 fn write_unique_ptr(out: &mut OutFile, key: NamedImplKey) {
