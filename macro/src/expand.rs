@@ -14,8 +14,8 @@ use crate::type_id::Crate;
 use crate::{derive, generics};
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{format_ident, quote, quote_spanned, ToTokens};
-use syn::spanned::Spanned;
 use std::mem;
+use syn::spanned::Spanned;
 use syn::{parse_quote, punctuated, Generics, Lifetime, Result, Token};
 
 pub(crate) fn bridge(mut ffi: Module) -> Result<TokenStream> {
@@ -687,6 +687,7 @@ fn expand_cxx_function_shim(efn: &ExternFn, types: &Types) -> TokenStream {
                         quote_spanned!(span=> ::cxx::UniquePtr::from_raw(#call))
                     }
                 }
+                // TODO: KjBox match clause
                 Type::Ref(ty) => match &ty.inner {
                     Type::Ident(ident) if ident.rust == RustString => match ty.mutable {
                         false => quote_spanned!(span=> #call.as_string()),
@@ -726,10 +727,10 @@ fn expand_cxx_function_shim(efn: &ExternFn, types: &Types) -> TokenStream {
                         false => quote_spanned!(span=> #call.as_slice::<#inner>()),
                         true => quote_spanned!(span=> #call.as_mut_slice::<#inner>()),
                     }
-                },
+                }
                 Type::Future(_) => {
                     quote_spanned!(span=> ::kj_rs::new_callbacks_promise_future(#call))
-                },
+                }
                 _ => call,
             },
         };

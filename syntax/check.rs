@@ -757,7 +757,7 @@ fn describe(cx: &mut Check, ty: &Type) -> String {
         Type::RustBox(_) => "Box".to_owned(),
         Type::RustVec(_) => "Vec".to_owned(),
         Type::UniquePtr(_) => "unique_ptr".to_owned(),
-        Type::KjOwn(_) => "kj:Own".to_owned(),
+        Type::KjOwn(_) => "kj::Own".to_owned(),
         Type::SharedPtr(_) => "shared_ptr".to_owned(),
         Type::WeakPtr(_) => "weak_ptr".to_owned(),
         Type::Ref(_) => "reference".to_owned(),

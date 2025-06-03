@@ -16,6 +16,8 @@ pub mod ffi {
         // async fn c_async_struct_fn() -> Shared;
 
         fn cpp_kj_own() -> KjOwn<CppType>;
+        fn cpptype_get(&self) -> u64;
+        fn call();
     }
 
 }
@@ -36,8 +38,9 @@ mod tests {
 
     #[test]
     fn kj_own() {
+        ffi::call();
         let own = ffi::cpp_kj_own();
-        assert_eq!(*own, 42);
+        assert_eq!(own.cpptype_get(), 42);
         std::mem::drop(own);
     }
 }

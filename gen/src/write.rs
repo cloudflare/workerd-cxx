@@ -1617,6 +1617,7 @@ fn write_rust_vec_impl(out: &mut OutFile, key: NamedImplKey) {
 }
 
 fn write_kj_own(out: &mut OutFile, key: NamedImplKey) {
+    #[cfg(debug_assertions)]
     todo!("kj_own cxx codegen")
 }
 
