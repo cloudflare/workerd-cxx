@@ -453,6 +453,7 @@ mod rust_str;
 mod rust_string;
 mod rust_type;
 mod rust_vec;
+pub mod kj_rs;
 mod shared_ptr;
 #[path = "cxx_string.rs"]
 mod string;

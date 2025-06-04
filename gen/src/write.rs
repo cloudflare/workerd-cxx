@@ -1617,8 +1617,28 @@ fn write_rust_vec_impl(out: &mut OutFile, key: NamedImplKey) {
 }
 
 fn write_kj_own(out: &mut OutFile, key: NamedImplKey) {
-    #[cfg(debug_assertions)]
-    todo!("kj_own cxx codegen")
+    let ident = key.rust;
+    let resolve = out.types.resolve(ident);
+    let inner = resolve.name.to_fully_qualified();
+    let instance = resolve.name.to_symbol();
+
+    out.include.new = true;
+    out.include.utility = true;
+
+    // Some aliases are to opaque types; some are to trivial types. We can't
+    // know at code generation time, so we generate both C++ and Rust side
+    // bindings for a "new" method anyway. But the Rust code can't be called for
+    // Opaque types because the 'new' method is not implemented.
+    let can_construct_from_value = out.types.is_maybe_trivial(ident);
+
+    begin_function_definition(out);
+    writeln!(
+        out,
+        "void cxxbridge1$kjown${}$drop(::kj::Own<{}> *self) noexcept {{",
+        instance, inner,
+    );
+    writeln!(out, "  self->~Own();");
+    writeln!(out, "}}");
 }
 
 fn write_unique_ptr(out: &mut OutFile, key: NamedImplKey) {

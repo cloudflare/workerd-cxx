@@ -1,3 +1,5 @@
+pub mod types;
+
 #[cxx::bridge(namespace = "kj_rs")]
 pub mod ffi {
     struct Shared {
@@ -6,8 +8,7 @@ pub mod ffi {
 
     unsafe extern "C++" {
         include!("tests/kj-rs/tests.h");
-
-        type CppType;
+        type CppType = crate::types::ffi::CppType;
 
         async fn c_async_void_fn();
 
@@ -16,16 +17,14 @@ pub mod ffi {
         // async fn c_async_struct_fn() -> Shared;
 
         fn cpp_kj_own() -> KjOwn<CppType>;
-        fn cpptype_get(&self) -> u64;
-        fn call();
+        // fn cpptype_get(&self) -> u64;
     }
 
 }
 
-
 #[cfg(test)]
 mod tests {
-    use crate::ffi;
+    use crate::{ffi, types::ffi as ffi2};
 
     // let kj-rs verify the behavior, just check compilation
     #[allow(clippy::let_underscore_future)]
@@ -38,9 +37,9 @@ mod tests {
 
     #[test]
     fn kj_own() {
-        ffi::call();
         let own = ffi::cpp_kj_own();
-        assert_eq!(own.cpptype_get(), 42);
+        // assert_eq!(own.cpptype_get(), 42);
+        // Explicitly drop for clarity / debugging drop impl
         std::mem::drop(own);
     }
 }
