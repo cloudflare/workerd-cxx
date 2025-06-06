@@ -17,7 +17,6 @@ pub mod ffi {
         // async fn c_async_struct_fn() -> Shared;
 
         fn cpp_kj_own() -> KjOwn<CppType>;
-        // fn cpptype_get(&self) -> u64;
     }
 
 }
@@ -37,8 +36,11 @@ mod tests {
 
     #[test]
     fn kj_own() {
-        let own = ffi::cpp_kj_own();
-        // assert_eq!(own.cpptype_get(), 42);
+        let mut own = ffi::cpp_kj_own();
+        // Methods on C++ classes can be called from Rust
+        assert_eq!(own.cpptype_get(), 42);
+        own.pin_mut().cpptype_set(14);
+        assert_eq!(own.cpptype_get(), 14);
         // Explicitly drop for clarity / debugging drop impl
         std::mem::drop(own);
     }

@@ -5,6 +5,7 @@ pub mod ffi {
 
         type CppType;
         fn cpptype_get(&self) -> u64;
+        fn cpptype_set(self: Pin<&mut CppType>, val: u64);
     }
 
     impl KjOwn<CppType> {}

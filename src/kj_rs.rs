@@ -1,7 +1,10 @@
 //! Temporary module to hold the rust side of the kj::Own<T> type.
-
+use crate::fmt::display;
+use std::ops::DerefMut;
+use std::pin::Pin;
 use std::mem::MaybeUninit;
 use std::fmt::{self, Display, Debug};
+use std::ops::Deref;
 use std::ffi::c_void;
 use std::marker::PhantomData;
 
@@ -25,16 +28,49 @@ where
     T: KjOwnTarget
 {
     // Possible functions can include:
-    // [`KjOwn::heap`]
+    // [`KjOwn::heap`] for allocating C++ types from rust, by calling into the C++ `kj::heap` function
     // [`KjOwn::fakeOwn`]
     // [`KjOwn::refCounted`]
     // [`KjOwn::attachRef`]
+
+    /// Returns a mutable pinned reference to the object owned by this KjOwn
+    /// if any, otherwise None.
+    pub fn as_mut(&mut self) -> Option<Pin<&mut T>> {
+        let this = self as *const Self as *const c_void;
+        unsafe {
+            let mut_reference = T::__get(this).cast_mut().as_mut()?;
+            Some(Pin::new_unchecked(mut_reference))
+        }
+    }
 
     /// Returns a reference to the object owned by this KjOwn if any,
     /// otherwise None.
     pub fn as_ref(&self) -> Option<&T> {
         let this = self as *const Self as *const c_void;
         unsafe { T::__get(this).as_ref() }
+    }
+
+    /// Returns a mutable pinned reference to the object owned by this
+    /// KjOwn.
+    ///
+    /// # Panics
+    ///
+    /// Panics if the KjOwn holds a null pointer.
+    pub fn pin_mut(&mut self) -> Pin<&mut T> {
+        match self.as_mut() {
+            Some(target) => target,
+            None => panic!(
+                "called pin_mut on a null KjOwn<{}>",
+                display(T::__typename),
+            ),
+        }
+    }
+
+    /// Returns a raw const pointer to the object owned by this KjOwn if
+    /// any, otherwise the null pointer.
+    pub fn as_ptr(&self) -> *const T {
+        let this = self as *const Self as *const c_void;
+        unsafe { T::__get(this) }
     }
 }
 
@@ -53,6 +89,38 @@ unsafe impl<T> Send for KjOwn<T> where T: Send + KjOwnTarget {}
 
 unsafe impl<T> Sync for KjOwn<T> where T: Sync + KjOwnTarget {}
 
+impl<T> Deref for KjOwn<T>
+where
+    T: KjOwnTarget
+{
+    type Target = T;
+    
+    fn deref(&self) -> &Self::Target {
+        match self.as_ref() {
+            Some(target) => target,
+            None => panic!(
+                "called deref on a null KjOwn<{}>",
+                display(T::__typename),
+            ),
+        }
+    }
+}
+
+impl<T> DerefMut for KjOwn<T>
+where
+    T: KjOwnTarget + Unpin
+{
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        match self.as_mut() {
+            Some(target) => Pin::into_inner(target),
+            None => panic!(
+                "called deref_mut on a null KjOwn<{}>",
+                display(T::__typename),
+            ),
+        }
+    }
+}
+
 // CXX SharedPtr boilerplate:
 // 
 // KjOwn is not a self-referential type and is safe to move out of a Pin,
@@ -60,17 +128,17 @@ unsafe impl<T> Sync for KjOwn<T> where T: Sync + KjOwnTarget {}
 
 impl<T> Unpin for KjOwn<T> where T: KjOwnTarget {}
 
-// impl<T> Debug for KjOwn<T>
-// where
-//     T: Debug + KjOwnTarget,
-// {
-//     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-//         match self.as_ref() {
-//             None => formatter.write_str("nullptr"),
-//             Some(value) => Debug::fmt(value, formatter),
-//         }
-//     }
-// }
+impl<T> Debug for KjOwn<T>
+where
+    T: Debug + KjOwnTarget,
+{
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        match self.as_ref() {
+            None => formatter.write_str("nullptr"),
+            Some(value) => Debug::fmt(value, formatter),
+        }
+    }
+}
 
 impl<T> Display for KjOwn<T>
 where
