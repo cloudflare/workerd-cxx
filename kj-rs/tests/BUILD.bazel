@@ -57,10 +57,15 @@ cc_test(
     srcs = [
         "awaitables-cc-test.c++",
     ],
+    linkstatic = select({
+        "@platforms//os:windows": True,
+        "//conditions:default": False,
+    }),
     deps = [
-        ":test-promises",
         ":awaitables-rust",
         ":bridge",
+        ":test-promises",
+        "//third-party:runtime",
         "@capnp-cpp//src/kj:kj-test",
     ],
 )
