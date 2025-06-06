@@ -1566,9 +1566,8 @@ fn expand_kj_own(
     let link_null = format!("{}null", prefix);
     let link_uninit = format!("{}uninit", prefix);
     let link_clone = format!("{}clone", prefix);
-    // Next?
-    let link_get = format!("{}get", prefix);
     // Used
+    let link_get = format!("{}get", prefix);
     let link_drop = format!("{}drop", prefix);
 
     let (impl_generics, ty_generics) = generics::split_for_impl(key, explicit_impl, resolve);
@@ -1580,6 +1579,9 @@ fn expand_kj_own(
     quote_spanned! {end_span=>
         #[automatically_derived]
         #unsafe_token impl #impl_generics ::cxx::kj_rs::KjOwnTarget for #ident #ty_generics {
+            fn __typename(f: &mut ::cxx::core::fmt::Formatter<'_>) -> ::cxx::core::fmt::Result {
+                f.write_str(#name)
+            }
             unsafe fn __drop(this: *mut ::cxx::core::ffi::c_void) {
                 #UnsafeExtern extern "C" {
                     #[link_name = #link_drop]
@@ -1588,6 +1590,13 @@ fn expand_kj_own(
                 unsafe {
                     __drop(this);
                 }
+            }
+            unsafe fn __get(this: *const ::cxx::core::ffi::c_void) -> *const Self {
+                #UnsafeExtern extern "C" {
+                    #[link_name = #link_get]
+                    fn __get(this: *const ::cxx::core::ffi::c_void) -> *const ::cxx::core::ffi::c_void;
+                }
+                unsafe { __get(this).cast() }
             }
         }
     }

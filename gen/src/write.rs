@@ -1639,6 +1639,15 @@ fn write_kj_own(out: &mut OutFile, key: NamedImplKey) {
     );
     writeln!(out, "  self->~Own();");
     writeln!(out, "}}");
+
+    // begin_function_definition(out);
+    // writeln!(
+    //     out,
+    //     "{} const *cxxbridge1$kjown${}$get(::kj::Own<{}> const &self) noexcept {{",
+    //     inner, instance, inner,
+    // );
+    // writeln!(out, "  return self.get();");
+    // writeln!(out, "}}");
 }
 
 fn write_unique_ptr(out: &mut OutFile, key: NamedImplKey) {

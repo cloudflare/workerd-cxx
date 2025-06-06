@@ -244,10 +244,9 @@ impl<'a> Types<'a> {
     pub(crate) fn needs_indirect_abi(&self, ty: &Type) -> bool {
         match ty {
             Type::RustBox(_)
-            | Type::UniquePtr(_)
-            | Type::KjOwn(_) => false,
+            | Type::UniquePtr(_) => false,
             Type::Array(_) => true,
-            Type::Future(_) => true,
+            Type::Future(_) | Type::KjOwn(_) => true,
             _ => !self.is_guaranteed_pod(ty),
         }
     }
