@@ -9,6 +9,7 @@ rust_test(
     deps = [
         ":bridge",
         ":tests",
+        ":types",
         "//:cxx",
         "@kj-rs//:kj-rs",
     ],
@@ -24,6 +25,16 @@ rust_cxx_bridge(
     ],
 )
 
+rust_cxx_bridge(
+    name = "types",
+    testonly = True,
+    src = "types.rs",
+    hdrs = ["tests.h", "cxx-types.h"],
+    deps = [
+        "@kj-rs//:kj-rs",
+    ],
+)
+
 cc_library(
     name = "tests",
     testonly = True,
@@ -31,7 +42,7 @@ cc_library(
         "tests.cc",
         "cxx-types.cc"
     ],
-    hdrs = ["tests.h", "cxx-types.h"],
+    hdrs = ["tests.h", "cxx-types.h", "lib.rs.h"],
     deps = [
         "@capnp-cpp//src/kj:kj-async",
         "@kj-rs//:kj-rs",
