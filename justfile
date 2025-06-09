@@ -14,6 +14,9 @@ test:
 clippy:
     bazel build --config=clippy  //...
 
+expand:
+    bazel build //tests/kj-rs:test_expand
+
 cargo-update:
     bazel run //third-party:vendor
 
