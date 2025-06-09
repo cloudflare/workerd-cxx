@@ -2,6 +2,7 @@
 #![allow(clippy::missing_errors_doc)]
 #![allow(clippy::unused_async)]
 
+mod async_stream;
 mod test_futures;
 
 use test_futures::{
@@ -14,6 +15,9 @@ use test_futures::{
 type Result<T> = std::io::Result<T>;
 type Error = std::io::Error;
 
+use async_stream::{ZeroStream, new_zero_stream};
+
+#[allow(clippy::unnecessary_box_returns)]
 #[cxx::bridge(namespace = "kj_rs_demo")]
 mod ffi {
     struct Shared {
@@ -72,6 +76,19 @@ mod ffi {
 
         async unsafe fn lifetime_arg_void<'a>(buf: &'a [u8]);
         async unsafe fn lifetime_arg_result<'a>(buf: &'a [u8]) -> Result<()>;
+    }
+
+    // see `async_stream`
+    extern "Rust" {
+        type ZeroStream;
+
+        fn new_zero_stream(size: usize) -> Box<ZeroStream>;
+
+        async unsafe fn try_read<'a>(
+            self: &'a mut ZeroStream,
+            buffer: &'a mut [u8],
+            min_bytes: usize,
+        ) -> Result<usize>;
     }
 }
 

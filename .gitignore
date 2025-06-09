@@ -6,3 +6,8 @@
 /expand.rs
 /target/
 /Cargo.lock
+flamegraph.*
+flamegraph-*.*
+perf.data
+perf.data.*
+
