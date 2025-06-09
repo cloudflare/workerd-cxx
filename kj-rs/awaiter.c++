@@ -87,27 +87,6 @@ bool RustPromiseAwaiter::poll(const WakerRef& waker, const KjWaker* maybeKjWaker
   KJ_IF_SOME(optionWaker, maybeOptionWaker) {
     // Our Promise is not yet ready.
 
-    // Check for an optimized wake path.
-    KJ_IF_SOME(kjWaker, maybeKjWaker) {
-      KJ_IF_SOME(futurePollEvent, kjWaker.tryGetFuturePollEvent()) {
-        // Optimized path. The Future which is polling our Promise is in turn being polled by a
-        // `co_await` expression somewhere up the stack from us. We can arrange to arm the
-        // `co_await` expression's KJ Event directly when our Promise is ready.
-
-        // If we had an opaque Waker stored in OptionWaker before, drop it now, as we won't be
-        // needing it.
-        optionWaker.set_none();
-
-        // Store a reference to the current `co_await` expression's Future polling Event. The
-        // reference is weak, and will be cleared if the `co_await` expression happens to end before
-        // our Promise is ready. In the more likely case that our Promise becomes ready while the
-        // `co_await` expression is still active, we'll arm its Event so it can `poll()` us again.
-        linkedGroup().set(futurePollEvent);
-
-        return false;
-      }
-    }
-
     // Unoptimized fallback path.
 
     // Tell our OptionWaker to store a clone of whatever Waker we were given.

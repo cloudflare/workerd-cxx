@@ -1,5 +1,4 @@
-#include "kj-rs/tests/lib.rs.h"
-
+#include <kj-rs-demo/lib.rs.h>
 #include <kj-rs-demo/test-promises.h>
 
 #include <kj/debug.h>

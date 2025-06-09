@@ -24,6 +24,7 @@ rust_library(
         # TODO(now): Why isn't :cxx transitive?
         "@workerd-cxx//:cxx",
         "//kj-rs",
+        "@crates.io//:futures",
     ],
 )
 
@@ -169,4 +170,20 @@ cc_test(
         "//third-party:runtime",
         "@capnp-cpp//src/kj:kj-test",
     ],
+)
+
+cc_test(
+    name = "async-stream-test",
+    size = "medium",
+    srcs = [
+        "async-stream-test.c++",
+    ],
+    deps = [
+        ":tests",
+        ":bridge",
+        ":test-promises",
+        ":test-maybe",
+        "@capnp-cpp//src/kj:kj-test",
+    ],
+    linkstatic = True,
 )
