@@ -21,7 +21,7 @@ rust_cxx_bridge(
     src = "lib.rs",
     hdrs = ["tests.h", "cxx-types.h"],
     deps = [
-        "@kj-rs//:kj-rs",
+        "//kj-rs",
     ],
 )
 

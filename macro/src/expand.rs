@@ -1613,7 +1613,7 @@ fn expand_kj_own(
 
     quote_spanned! {end_span=>
         #[automatically_derived]
-        #unsafe_token impl #impl_generics ::cxx::kj_rs::KjOwnTarget for #ident #ty_generics {
+        #unsafe_token impl #impl_generics ::kj_rs::KjOwnTarget for #ident #ty_generics {
             fn __typename(f: &mut ::cxx::core::fmt::Formatter<'_>) -> ::cxx::core::fmt::Result {
                 f.write_str(#name)
             }

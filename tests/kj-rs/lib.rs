@@ -29,7 +29,6 @@ pub mod ffi {
         async fn rust_async_void_result_fn() -> Result<()>;
         async fn rust_async_int_result_fn() -> Result<i64>;
     }
-
 }
 
 async fn rust_async_void_fn() {}
@@ -68,5 +67,15 @@ mod tests {
         assert_eq!(own.cpptype_get(), 14);
         // Explicitly drop for clarity / debugging drop impl
         std::mem::drop(own);
+    }
+
+    #[test]
+    fn kj_move() {
+        let owned = ffi::cpp_kj_own();
+        // Move owned into moved_value
+        let mut moved_value = owned;
+        assert_eq!(moved_value.cpptype_get(), 42);
+        moved_value.pin_mut().cpptype_set(14);
+        assert_eq!(moved_value.cpptype_get(), 14);
     }
 }

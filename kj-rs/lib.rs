@@ -6,6 +6,8 @@ pub use crate::ffi::KjWaker;
 pub use awaiter::GuardedRustPromiseAwaiter;
 pub use awaiter::PromiseAwaiter;
 pub use future::FuturePollStatus;
+pub use own::KjOwn;
+pub use own::KjOwnTarget;
 pub use promise::KjPromise;
 pub use promise::KjPromiseNodeImpl;
 pub use promise::OwnPromiseNode;
@@ -13,10 +15,12 @@ pub use promise::PromiseFuture;
 pub use promise::new_callbacks_promise_future;
 
 mod awaiter;
+mod fmt;
 mod future;
 mod lazy_pin_init;
 mod promise;
 mod waker;
+mod own;
 
 pub mod repr {
     pub use crate::future::repr::*;
