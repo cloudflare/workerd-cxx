@@ -1,4 +1,4 @@
-//! Temporary module to hold the rust side of the `kj::Own<T>` type.
+//! The `workerd-cxx` module containing the [`KjOwn<T>`] type, which is bindings to the `kj::Own<T>` C++ type
 use crate::fmt::display;
 use std::ffi::c_void;
 use std::fmt::{self, Debug, Display};
