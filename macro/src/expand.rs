@@ -87,7 +87,12 @@ fn expand(ffi: Module, doc: Doc, attrs: OtherAttrs, apis: &[Api], types: &Types)
                 expanded.extend(expand_rust_type_impl(ety));
                 hidden.extend(expand_rust_type_layout(ety, types));
             }
-            Api::RustFunction(efn) => hidden.extend(expand_rust_function_shim(efn, types)),
+            Api::RustFunction(efn) => {
+                if efn.asyncness.is_some() {
+                    // todo!("expand_rust_function_shim\n{}", expand_rust_function_shim(efn, types).to_string());
+                }
+                hidden.extend(expand_rust_function_shim(efn, types));
+            }
             Api::TypeAlias(alias) => {
                 expanded.extend(expand_type_alias(alias));
                 hidden.extend(expand_type_alias_verify(alias, types));
@@ -1119,6 +1124,11 @@ fn expand_rust_function_shim_impl(
             false => Some(quote_spanned!(span=> ::cxx::private::RustSlice::from_ref)),
             true => Some(quote_spanned!(span=> ::cxx::private::RustSlice::from_mut)),
         },
+        Type::Future(fut) => if fut.throws_tokens.is_some() {
+            Some(quote_spanned!(span=> ::kj_rs::repr::future))
+        } else {
+            Some(quote_spanned!(span=> ::kj_rs::repr::infallible_future))
+        },
         _ => None,
     });
 
@@ -1136,7 +1146,17 @@ fn expand_rust_function_shim_impl(
 
     // always indirect return when there's a return value
     let out_param = sig.ret.as_ref().map(|ret| {
-        let ret = expand_extern_type(ret, types, false);
+        let ret = if let Type::Future(fut) = ret {
+            let span = sig.ret.span();
+            let output = &fut.output;
+            if fut.throws_tokens.is_some() {
+                quote_spanned!(span=> ::kj_rs::repr::RustFuture::<#output>)
+            } else {
+                quote_spanned!(span=> ::kj_rs::repr::RustInfallibleFuture::<#output>)
+            }
+        } else {
+            expand_extern_type(ret, types, false)
+        };
         quote_spanned!(span=> __return: *mut #ret,)
     });
     let out = match sig.ret {
@@ -1227,6 +1247,13 @@ fn expand_rust_function_shim_super(
             quote_spanned!(rangle.span=> ::cxx::core::fmt::Display>)
         };
         quote!(-> #result_begin #result_end)
+    } else if let Some(Type::Future(fut)) = &sig.ret {
+        let output = &fut.output;
+        if fut.throws_tokens.is_some() {
+            quote!(-> std::pin::Pin<Box<dyn ::std::future::Future<Output = ::std::result::Result<#output, String>> + Send>>)
+        } else {
+            quote!(-> std::pin::Pin<Box<dyn ::std::future::Future<Output = #output> + Send>>)
+        }
     } else {
         expand_return_type(&sig.ret)
     };
@@ -1243,7 +1270,15 @@ fn expand_rust_function_shim_super(
         }
     };
 
-    let mut body = quote_spanned!(span=> #call(#(#vars,)*));
+    let mut body = if let Some(Type::Future(fut)) = &sig.ret {
+        if fut.throws_tokens.is_some() {
+            quote_spanned!(span=> Box::pin(async move {#call(#(#vars,)*).await.map_err(|e| e.to_string())}))
+        } else {
+            quote_spanned!(span=> Box::pin(#call(#(#vars,)*)))
+        }
+    } else {
+        quote_spanned!(span=> #call(#(#vars,)*))
+    };
     let mut allow_unused_unsafe = None;
     if unsafety.is_some() {
         body = quote_spanned!(span=> unsafe { #body });
@@ -1992,8 +2027,8 @@ fn expand_extern_type(ty: &Type, types: &Types, proper: bool) -> TokenStream {
             let rust_slice = Ident::new("RustSlice", ty.bracket.span.join());
             quote_spanned!(span=> ::cxx::private::#rust_slice)
         }
-        Type::Future(ty) => {
-            let span = ty.span();
+        Type::Future(output) => {
+            let span = output.span();
             quote_spanned!(span=> ::kj_rs::KjPromiseNodeImpl)
         }
         _ => quote!(#ty),

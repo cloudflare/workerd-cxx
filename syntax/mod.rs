@@ -323,6 +323,7 @@ pub(crate) struct Array {
 
 pub(crate) struct Future {
     pub output: Type,
+    pub throws_tokens: Option<(kw::Result, Token![<], Token![>])>,
 }
 
 #[derive(Copy, Clone, PartialEq)]
