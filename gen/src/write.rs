@@ -1003,9 +1003,6 @@ fn write_rust_function_shim_decl(
             write!(out, " const");
         }
     }
-    if !throws {
-        write!(out, " noexcept");
-    }
 }
 
 fn write_rust_function_shim_impl(
