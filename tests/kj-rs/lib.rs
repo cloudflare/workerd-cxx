@@ -1,5 +1,5 @@
 #![allow(dead_code)]
-#![allow(clippy::unused_async)]
+#![allow(clippy::unused_async, clippy::must_use_candidate)]
 
 pub mod types;
 
@@ -20,6 +20,7 @@ pub mod ffi {
         async fn c_async_struct_fn() -> Shared;
 
         fn cpp_kj_own() -> KjOwn<CppType>;
+        fn give_own_back(own: KjOwn<CppType>);
     }
 
     extern "Rust" {
@@ -47,7 +48,7 @@ async fn rust_async_int_result_fn() -> Result<i64> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{ffi, types::ffi as ffi2};
+    use crate::ffi;
 
     // let kj-rs verify the behavior, just check compilation
     #[allow(clippy::let_underscore_future)]
@@ -77,5 +78,12 @@ mod tests {
         assert_eq!(moved_value.cpptype_get(), 42);
         moved_value.pin_mut().cpptype_set(14);
         assert_eq!(moved_value.cpptype_get(), 14);
+    }
+
+    #[test]
+    fn test_pass_cc() {
+        let mut own = ffi::cpp_kj_own();
+        own.pin_mut().cpptype_set(14);
+        ffi::give_own_back(own);
     }
 }

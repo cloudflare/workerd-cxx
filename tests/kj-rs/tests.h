@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <kj/async.h>
+#include <kj/debug.h>
 #include "cxx-types.h"
 #include "tests/kj-rs/lib.rs.h"
 
@@ -11,5 +12,6 @@ kj::Promise<void> c_async_void_fn();
 kj::Promise<int64_t> c_async_int_fn();
 kj::Promise<Shared> c_async_struct_fn();
 kj::Own<CppType> cpp_kj_own();
+void give_own_back(kj::Own<CppType>);
 
 } // namespace kj_rs

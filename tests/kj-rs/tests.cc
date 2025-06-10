@@ -13,4 +13,9 @@ kj::Own<CppType> cpp_kj_own() {
     return kj::heap<CppType>(42); 
 }
 
+void give_own_back(kj::Own<CppType> own) {
+    own->cpptype_set(37);
+    KJ_ASSERT(own->cpptype_get() == 37);
+}
+
 } // namespace kj_rs

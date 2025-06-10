@@ -1,6 +1,10 @@
 #include "cxx-types.h"
 
 namespace kj_rs {
+
+CppType::~CppType() {
+    KJ_DBG("C++ destructor called");
+}
 	
 CppType::CppType(uint64_t val) : data(val) {}
 
