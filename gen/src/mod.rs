@@ -5,28 +5,28 @@ mod block;
 mod builtin;
 mod cfg;
 mod check;
-pub(super) mod error;
+pub mod error;
 mod file;
-pub(super) mod fs;
+pub mod fs;
 mod ifndef;
-pub(super) mod include;
+pub mod include;
 mod names;
 mod namespace;
 mod nested;
-pub(super) mod out;
+pub mod out;
 mod write;
 
 use self::cfg::UnsupportedCfgEvaluator;
 use self::error::{format_err, Result};
 use self::file::File;
 use self::include::Include;
-use crate::syntax::cfg::CfgExpr;
-use crate::syntax::report::Errors;
-use crate::syntax::{self, attrs, Types};
+use syntax::cfg::CfgExpr;
+use syntax::report::Errors;
+use syntax::{self, attrs, Types};
 use std::collections::BTreeSet as Set;
 use std::path::Path;
 
-pub(super) use self::error::Error;
+pub use self::error::Error;
 
 /// Options for C++ code generation.
 ///
@@ -42,7 +42,6 @@ pub(super) use self::error::Error;
 /// let mut opt = Opt::default();
 /// opt.cxx_impl_annotations = Some(impl_annotations);
 /// ```
-#[non_exhaustive]
 pub struct Opt {
     /// Any additional headers to #include. The cxxbridge tool does not parse or
     /// even require the given paths to exist; they simply go into the generated
@@ -57,10 +56,10 @@ pub struct Opt {
     /// Impl for handling conditional compilation attributes.
     pub cfg_evaluator: Box<dyn CfgEvaluator>,
 
-    pub(super) gen_header: bool,
-    pub(super) gen_implementation: bool,
-    pub(super) allow_dot_includes: bool,
-    pub(super) doxygen: bool,
+    pub gen_header: bool,
+    pub gen_implementation: bool,
+    pub allow_dot_includes: bool,
+    pub doxygen: bool,
 }
 
 /// Logic to decide whether a conditional compilation attribute is enabled or
@@ -107,7 +106,7 @@ impl Default for Opt {
     }
 }
 
-pub(super) fn generate_from_path(path: &Path, opt: &Opt) -> GeneratedCode {
+pub fn generate_from_path(path: &Path, opt: &Opt) -> GeneratedCode {
     let source = match read_to_string(path) {
         Ok(source) => source,
         Err(err) => format_err(path, "", err),
@@ -140,7 +139,7 @@ fn generate_from_string(source: &str, opt: &Opt) -> Result<GeneratedCode> {
     generate(syntax, opt)
 }
 
-pub(super) fn generate(syntax: File, opt: &Opt) -> Result<GeneratedCode> {
+pub fn generate(syntax: File, opt: &Opt) -> Result<GeneratedCode> {
     if syntax.modules.is_empty() {
         return Err(Error::NoBridgeMod);
     }

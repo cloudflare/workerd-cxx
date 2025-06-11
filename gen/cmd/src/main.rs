@@ -27,14 +27,12 @@
 
 mod app;
 mod cfg;
-mod gen;
 mod output;
-mod syntax;
 
 use crate::cfg::{CfgValue, FlagsCfgEvaluator};
-use crate::gen::error::{report, Result};
-use crate::gen::fs;
-use crate::gen::include::{self, Include};
+use gen::error::{report, Result};
+use gen::fs;
+use gen::include::{self, Include};
 use crate::output::Output;
 use std::collections::{BTreeMap as Map, BTreeSet as Set};
 use std::io::{self, Write};
