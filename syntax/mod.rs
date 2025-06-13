@@ -1,5 +1,31 @@
 // Functionality that is shared between the cxxbridge macro and the cmd.
 
+// NOTE(workerd-cxx): upstream is really messy
+#![allow(
+    clippy::cast_sign_loss,
+    clippy::enum_glob_use,
+    clippy::inherent_to_string,
+    clippy::into_iter_without_iter,
+    clippy::items_after_statements,
+    clippy::match_bool,
+    clippy::match_same_arms,
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::must_use_candidate,
+    clippy::needless_lifetimes,
+    clippy::needless_pass_by_value,
+    clippy::new_without_default,
+    clippy::nonminimal_bool,
+    clippy::pub_underscore_fields,
+    clippy::redundant_else,
+    clippy::should_implement_trait,
+    clippy::single_match_else,
+    clippy::too_many_arguments,
+    clippy::too_many_lines,
+    clippy::toplevel_ref_arg,
+    clippy::uninlined_format_args,
+)]
+
 pub mod atom;
 pub mod attrs;
 pub mod cfg;

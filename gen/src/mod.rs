@@ -1,6 +1,27 @@
 // Functionality that is shared between the cxx_build::bridge entry point and
 // the cxxbridge CLI command.
 
+// NOTE(workerd-cxx): upstream is really messy
+#![allow(
+    clippy::default_trait_access,
+    clippy::enum_glob_use,
+    clippy::items_after_statements,
+    clippy::match_on_vec_items,
+    clippy::match_same_arms,
+    clippy::missing_errors_doc,
+    clippy::missing_panics_doc,
+    clippy::must_use_candidate,
+    clippy::needless_lifetimes,
+    clippy::needless_pass_by_value,
+    clippy::ref_option,
+    clippy::similar_names,
+    clippy::single_match_else,
+    clippy::struct_excessive_bools,
+    clippy::too_many_lines,
+    clippy::toplevel_ref_arg,
+    clippy::uninlined_format_args,
+)]
+
 mod block;
 mod builtin;
 mod cfg;

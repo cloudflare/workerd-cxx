@@ -435,7 +435,7 @@ fn expand_cxx_type_assert_pinned(ety: &ExternType, types: &Types) -> TokenStream
     let infer = Token![_](ident.span());
 
     let resolve = types.resolve(ident);
-    let lifetimes = to_underscore_lifetimes(&resolve.generics);
+    let lifetimes = to_underscore_lifetimes(resolve.generics);
 
     quote! {
         let _: fn() = {
@@ -885,7 +885,7 @@ fn expand_rust_type_assert_unpin(ety: &ExternType, types: &Types) -> TokenStream
     };
 
     let resolve = types.resolve(ident);
-    let lifetimes = to_underscore_lifetimes(&resolve.generics);
+    let lifetimes = to_underscore_lifetimes(resolve.generics);
 
     quote_spanned! {ident.span()=>
         let _ = {
@@ -917,7 +917,7 @@ fn expand_rust_type_layout(ety: &ExternType, types: &Types) -> TokenStream {
     let local_alignof = format_ident!("__alignof_{}", ety.name.rust);
 
     let resolve = types.resolve(ident);
-    let lifetimes = to_underscore_lifetimes(&resolve.generics);
+    let lifetimes = to_underscore_lifetimes(resolve.generics);
 
     quote_spanned! {ident.span()=>
         {
