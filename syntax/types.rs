@@ -178,7 +178,7 @@ impl<'a> Types<'a> {
                 ImplKey::RustBox(ident)
                 | ImplKey::RustVec(ident)
                 | ImplKey::UniquePtr(ident)
-                | ImplKey::KjOwn(ident)
+                | ImplKey::Own(ident)
                 | ImplKey::SharedPtr(ident)
                 | ImplKey::WeakPtr(ident)
                 | ImplKey::CxxVector(ident) => {
@@ -246,7 +246,7 @@ impl<'a> Types<'a> {
             Type::RustBox(_)
             | Type::UniquePtr(_) => false,
             Type::Array(_) => true,
-            Type::Future(_) | Type::KjOwn(_) => true,
+            Type::Future(_) | Type::Own(_) => true,
             _ => !self.is_guaranteed_pod(ty),
         }
     }

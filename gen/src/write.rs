@@ -223,7 +223,7 @@ fn pick_includes_and_builtins(out: &mut OutFile, apis: &[Api]) {
             Type::SliceRef(_) => out.builtin.rust_slice = true,
             Type::Array(_) => out.include.array = true,
             Type::Ref(_) | Type::Void(_) | Type::Ptr(_) => {}
-            Type::Future(_) | Type::KjOwn(_) => out.include.kj_rs = true,
+            Type::Future(_) | Type::Own(_) => out.include.kj_rs = true,
         }
     }
 }
@@ -1228,7 +1228,7 @@ fn write_type(out: &mut OutFile, ty: &Type) {
             write_type(out, &ptr.inner);
             write!(out, ">");
         }
-        Type::KjOwn(ptr) => {
+        Type::Own(ptr) => {
             write!(out, "::kj::Own<");
             write_type(out, &ptr.inner);
             write!(out, ">");
@@ -1333,7 +1333,7 @@ fn write_space_after_type(out: &mut OutFile, ty: &Type) {
         Type::Ident(_)
         | Type::RustBox(_)
         | Type::UniquePtr(_)
-        | Type::KjOwn(_)
+        | Type::Own(_)
         | Type::SharedPtr(_)
         | Type::WeakPtr(_)
         | Type::Str(_)
@@ -1410,7 +1410,7 @@ fn write_generic_instantiations(out: &mut OutFile) {
             ImplKey::RustBox(ident) => write_rust_box_extern(out, ident),
             ImplKey::RustVec(ident) => write_rust_vec_extern(out, ident),
             ImplKey::UniquePtr(ident) => write_unique_ptr(out, ident),
-            ImplKey::KjOwn(ident) => write_kj_own(out, ident),
+            ImplKey::Own(ident) => write_kj_own(out, ident),
             ImplKey::SharedPtr(ident) => write_shared_ptr(out, ident),
             ImplKey::WeakPtr(ident) => write_weak_ptr(out, ident),
             ImplKey::CxxVector(ident) => write_cxx_vector(out, ident),
@@ -1636,6 +1636,12 @@ fn write_kj_own(out: &mut OutFile, key: NamedImplKey) {
     // bindings for a "new" method anyway. But the Rust code can't be called for
     // Opaque types because the 'new' method is not implemented.
     let can_construct_from_value = out.types.is_maybe_trivial(ident);
+
+    writeln!(
+        out,
+        "static_assert(sizeof(::kj::Own<{}>) == 2 * sizeof(void *), \"\");",
+        inner,
+    );
 
     begin_function_definition(out);
     writeln!(

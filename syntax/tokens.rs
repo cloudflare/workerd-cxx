@@ -26,7 +26,7 @@ impl ToTokens for Type {
             }
             Type::RustBox(ty)
             | Type::UniquePtr(ty)
-            | Type::KjOwn(ty)
+            | Type::Own(ty)
             | Type::SharedPtr(ty)
             | Type::WeakPtr(ty)
             | Type::CxxVector(ty)
@@ -72,7 +72,7 @@ impl ToTokens for Ty1 {
             "UniquePtr" | "SharedPtr" | "WeakPtr" | "CxxVector" => {
                 tokens.extend(quote_spanned!(span=> ::cxx::));
             }
-            "KjOwn" => {
+            "Own" => {
                 tokens.extend(quote_spanned!(span => ::kj_rs::));
             }
             "Box" => {

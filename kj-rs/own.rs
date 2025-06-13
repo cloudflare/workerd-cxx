@@ -1,4 +1,4 @@
-//! The `workerd-cxx` module containing the [`KjOwn<T>`] type, which is bindings to the `kj::Own<T>` C++ type
+//! The `workerd-cxx` module containing the [`Own<T>`] type, which is bindings to the `kj::Own<T>` C++ type
 use crate::fmt::display;
 use std::ffi::c_void;
 use std::fmt::{self, Debug, Display};
@@ -8,11 +8,11 @@ use std::ops::Deref;
 use std::ops::DerefMut;
 use std::pin::Pin;
 
-/// A [`KjOwn<T>`] represents the `kj::Own<T>`. It is a smart pointer to an opaque C++ type.
+/// A [`Own<T>`] represents the `kj::Own<T>`. It is a smart pointer to an opaque C++ type.
 #[repr(C)]
-pub struct KjOwn<T>
+pub struct Own<T>
 where
-    T: KjOwnTarget,
+    T: OwnTarget,
 {
     repr: [MaybeUninit<*mut c_void>; 2],
     _ty: PhantomData<T>,
@@ -21,18 +21,12 @@ where
 // Possible Other Types:
 // - SpaceFor<T>/construct>
 
-// Public-facing KjOwn api, backed by calls to unsafe code generated for each [`KjOwnTarget`]
-impl<T> KjOwn<T>
+/// Public-facing Own api, backed by calls to unsafe code generated for each [`OwnTarget`]
+impl<T> Own<T>
 where
-    T: KjOwnTarget,
+    T: OwnTarget,
 {
-    // Possible functions can include:
-    // [`KjOwn::heap`] for allocating C++ types from rust, by calling into the C++ `kj::heap` function
-    // [`KjOwn::fakeOwn`]
-    // [`KjOwn::refCounted`]
-    // [`KjOwn::attachRef`]
-
-    /// Returns a mutable pinned reference to the object owned by this [`KjOwn`]
+    /// Returns a mutable pinned reference to the object owned by this [`Own`]
     /// if any, otherwise None.
     pub fn as_mut(&mut self) -> Option<Pin<&mut T>> {
         let this = std::ptr::from_ref::<Self>(self).cast::<c_void>();
@@ -42,7 +36,7 @@ where
         }
     }
 
-    /// Returns a reference to the object owned by this [`KjOwn`] if any,
+    /// Returns a reference to the object owned by this [`Own`] if any,
     /// otherwise None.
     #[must_use]
     pub fn as_ref(&self) -> Option<&T> {
@@ -51,19 +45,19 @@ where
     }
 
     /// Returns a mutable pinned reference to the object owned by this
-    /// [`KjOwn`].
+    /// [`Own`].
     ///
     /// # Panics
     ///
-    /// Panics if the [`KjOwn`] holds a null pointer.
+    /// Panics if the [`Own`] holds a null pointer.
     pub fn pin_mut(&mut self) -> Pin<&mut T> {
         match self.as_mut() {
             Some(target) => target,
-            None => panic!("called pin_mut on a null KjOwn<{}>", display(T::__typename),),
+            None => panic!("called pin_mut on a null Own<{}>", display(T::__typename),),
         }
     }
 
-    /// Returns a raw const pointer to the object owned by this [`KjOwn`] if
+    /// Returns a raw const pointer to the object owned by this [`Own`] if
     /// any, otherwise the null pointer.
     #[must_use]
     pub fn as_ptr(&self) -> *const T {
@@ -72,10 +66,10 @@ where
     }
 }
 
-/// Represents a type which can be held in a [`KjOwn`] smart pointer.
+/// Represents a type which can be held in a [`Own`] smart pointer.
 /// # Safety
 /// Cannot be implmented outside of generated workerd-cxx code.
-pub unsafe trait KjOwnTarget {
+pub unsafe trait OwnTarget {
     #[doc(hidden)]
     fn __typename(f: &mut fmt::Formatter) -> fmt::Result;
     #[doc(hidden)]
@@ -84,46 +78,46 @@ pub unsafe trait KjOwnTarget {
     unsafe fn __get(this: *const c_void) -> *const Self;
 }
 
-unsafe impl<T> Send for KjOwn<T> where T: Send + KjOwnTarget {}
+unsafe impl<T> Send for Own<T> where T: Send + OwnTarget {}
 
-unsafe impl<T> Sync for KjOwn<T> where T: Sync + KjOwnTarget {}
+unsafe impl<T> Sync for Own<T> where T: Sync + OwnTarget {}
 
-impl<T> Deref for KjOwn<T>
+impl<T> Deref for Own<T>
 where
-    T: KjOwnTarget,
+    T: OwnTarget,
 {
     type Target = T;
 
     fn deref(&self) -> &Self::Target {
         match self.as_ref() {
             Some(target) => target,
-            None => panic!("called deref on a null KjOwn<{}>", display(T::__typename),),
+            None => panic!("called deref on a null Own<{}>", display(T::__typename),),
         }
     }
 }
 
-impl<T> DerefMut for KjOwn<T>
+impl<T> DerefMut for Own<T>
 where
-    T: KjOwnTarget + Unpin,
+    T: OwnTarget + Unpin,
 {
     fn deref_mut(&mut self) -> &mut Self::Target {
         match self.as_mut() {
             Some(target) => Pin::into_inner(target),
             None => panic!(
-                "called deref_mut on a null KjOwn<{}>",
+                "called deref_mut on a null Own<{}>",
                 display(T::__typename),
             ),
         }
     }
 }
 
-// KjOwn is not a self-referential type and is safe to move out of a Pin,
+// Own is not a self-referential type and is safe to move out of a Pin,
 // regardless whether the pointer's target is Unpin.
-impl<T> Unpin for KjOwn<T> where T: KjOwnTarget {}
+impl<T> Unpin for Own<T> where T: OwnTarget {}
 
-impl<T> Debug for KjOwn<T>
+impl<T> Debug for Own<T>
 where
-    T: Debug + KjOwnTarget,
+    T: Debug + OwnTarget,
 {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         match self.as_ref() {
@@ -133,9 +127,9 @@ where
     }
 }
 
-impl<T> Display for KjOwn<T>
+impl<T> Display for Own<T>
 where
-    T: Display + KjOwnTarget,
+    T: Display + OwnTarget,
 {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         match self.as_ref() {
@@ -145,9 +139,9 @@ where
     }
 }
 
-impl<T> Drop for KjOwn<T>
+impl<T> Drop for Own<T>
 where
-    T: KjOwnTarget,
+    T: OwnTarget,
 {
     fn drop(&mut self) {
         let this = std::ptr::from_mut::<Self>(self).cast::<c_void>();
@@ -159,7 +153,7 @@ where
 // are handled using a proc_macro in the macro crate.
 macro_rules! impl_kjown_target {
     ($segment:expr, $name:expr, $ty:ty) => {
-        unsafe impl KjOwnTarget for $ty {
+        unsafe impl OwnTarget for $ty {
             fn __typename(f: &mut fmt::Formatter) -> fmt::Result {
                 f.write_str($name)
             }

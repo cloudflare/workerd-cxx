@@ -111,7 +111,7 @@ fn expand(ffi: Module, doc: Doc, attrs: OtherAttrs, apis: &[Api], types: &Types)
             ImplKey::UniquePtr(ident) => {
                 expanded.extend(expand_unique_ptr(ident, types, explicit_impl));
             }
-            ImplKey::KjOwn(ident) => {
+            ImplKey::Own(ident) => {
                 expanded.extend(expand_kj_own(ident, types, explicit_impl));
             }
             ImplKey::SharedPtr(ident) => {
@@ -1597,11 +1597,7 @@ fn expand_kj_own(
     let name = ident.to_string();
     let resolve = types.resolve(ident);
     let prefix = format!("cxxbridge1$kjown${}$", resolve.name.to_symbol());
-    // Unused
-    let link_null = format!("{}null", prefix);
-    let link_uninit = format!("{}uninit", prefix);
-    let link_clone = format!("{}clone", prefix);
-    // Used
+
     let link_get = format!("{}get", prefix);
     let link_drop = format!("{}drop", prefix);
 
@@ -1613,7 +1609,7 @@ fn expand_kj_own(
 
     quote_spanned! {end_span=>
         #[automatically_derived]
-        #unsafe_token impl #impl_generics ::kj_rs::KjOwnTarget for #ident #ty_generics {
+        #unsafe_token impl #impl_generics ::kj_rs::OwnTarget for #ident #ty_generics {
             fn __typename(f: &mut ::cxx::core::fmt::Formatter<'_>) -> ::cxx::core::fmt::Result {
                 f.write_str(#name)
             }
