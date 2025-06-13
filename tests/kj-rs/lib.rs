@@ -32,7 +32,7 @@ pub mod ffi {
         #[cxx_name = "setData"]
         fn set_data(self: Pin<&mut CxxType>, val: u64);
 
-        fn cpp_kj_own() -> Own<CxxType>;
+        fn cxx_kj_own() -> Own<CxxType>;
         fn null_kj_own() -> Own<CxxType>;
         fn give_own_back(own: Own<CxxType>);
         fn modify_own_return_test();
@@ -101,7 +101,7 @@ mod tests {
 
     #[test]
     fn kj_own() {
-        let mut own = ffi::cpp_kj_own();
+        let mut own = ffi::cxx_kj_own();
         // Methods on C++ classes can be called from Rust
         assert_eq!(own.get_data(), 42);
         own.pin_mut().set_data(14);
@@ -112,7 +112,7 @@ mod tests {
 
     #[test]
     fn kj_move() {
-        let mut owned = ffi::cpp_kj_own();
+        let mut owned = ffi::cxx_kj_own();
         owned.pin_mut().set_data(27);
         // Move owned into moved_value
         let moved_value = owned;
@@ -125,14 +125,24 @@ mod tests {
 
     #[test]
     fn test_pass_cc() {
-        let mut own = ffi::cpp_kj_own();
+        let mut own = ffi::cxx_kj_own();
         own.pin_mut().set_data(14);
         ffi::give_own_back(own);
     }
 
     #[test]
+    fn kj_get_test() {
+        let mut own = ffi::cxx_kj_own();
+        let data_ptr = own.as_ptr();
+        own.pin_mut().set_data(75193);
+        unsafe {
+            assert_eq!(data_ptr.as_ref().unwrap().get_data(), 75193);
+        }
+    }
+
+    #[test]
     fn test_breaking_things() {
-        let own = ffi::breaking_things();
+        let _ = ffi::breaking_things();
     }
 
     #[test]
@@ -149,7 +159,7 @@ mod tests {
 
     #[test]
     fn test_own_as_ref_as_mut() {
-        let mut own = ffi::cpp_kj_own();
+        let mut own = ffi::cxx_kj_own();
 
         // Test as_ref
         assert!(own.as_ref().is_some());
@@ -167,7 +177,7 @@ mod tests {
 
     #[test]
     fn test_own_as_ptr() {
-        let own = ffi::cpp_kj_own();
+        let own = ffi::cxx_kj_own();
         let ptr = own.as_ptr();
         assert!(!ptr.is_null());
 
@@ -183,14 +193,14 @@ mod tests {
 
         // Test in Vec
         for i in 0..10 {
-            let mut own = ffi::cpp_kj_own();
+            let mut own = ffi::cxx_kj_own();
             own.pin_mut().set_data(i * 10);
             owns_vec.push(own);
         }
 
         // Test in HashMap
         for i in 0..10 {
-            let mut own = ffi::cpp_kj_own();
+            let mut own = ffi::cxx_kj_own();
             own.pin_mut().set_data(i * 100);
             owns_map.insert(format!("key_{i}"), own);
         }
@@ -223,7 +233,7 @@ mod tests {
     #[test]
     fn test_own_rapid_create_destroy() {
         for _ in 0..1000 {
-            let mut own = ffi::cpp_kj_own();
+            let mut own = ffi::cxx_kj_own();
             own.pin_mut().set_data(12345);
             assert_eq!(own.get_data(), 12345);
             // Implicit drop at end of loop
@@ -232,8 +242,8 @@ mod tests {
 
     #[test]
     fn test_own_nested_operations() {
-        let mut own1 = ffi::cpp_kj_own();
-        let mut own2 = ffi::cpp_kj_own();
+        let mut own1 = ffi::cxx_kj_own();
+        let mut own2 = ffi::cxx_kj_own();
 
         own1.pin_mut().set_data(100);
         own2.pin_mut().set_data(200);
@@ -248,20 +258,20 @@ mod tests {
 
     #[test]
     fn test_own_debug_display() {
-        let own = ffi::cpp_kj_own();
+        let own = ffi::cxx_kj_own();
         let debug_str = format!("{own:?}");
         assert!(!debug_str.is_empty());
 
         let null_own = ffi::null_kj_own();
         let null_debug = format!("{null_own:?}");
-        assert_eq!(null_debug, "nullptr");
+        assert_eq!(null_debug, "Own { ptr: 0x0, disposer: 0x0 }");
     }
 
     #[test]
     fn test_own_send_between_threads() {
         use std::thread;
 
-        let own = ffi::cpp_kj_own();
+        let own = ffi::cxx_kj_own();
         let handle = thread::spawn(move || {
             // Own should be Send, so this should work
             assert_eq!(own.get_data(), 42);
@@ -289,7 +299,7 @@ mod tests {
                 barrier_clone.wait();
 
                 // Create and use Own concurrently
-                let mut own = ffi::cpp_kj_own();
+                let mut own = ffi::cxx_kj_own();
                 own.pin_mut().set_data(thread_id as u64 * 100);
                 assert_eq!(own.get_data(), thread_id as u64 * 100);
 
@@ -325,7 +335,7 @@ mod tests {
             let tx_clone = tx.clone();
             thread::spawn(move || {
                 for i in 0..items_per_thread {
-                    let mut own = ffi::cpp_kj_own();
+                    let mut own = ffi::cxx_kj_own();
                     let value = thread_id * items_per_thread + i;
                     own.pin_mut().set_data(value);
 

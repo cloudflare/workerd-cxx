@@ -1,6 +1,5 @@
 #pragma once
 
-#include "kj/common.h"
 #include "kj/memory.h"
 #include <cstdint>
 #include <kj/debug.h>
@@ -21,26 +20,11 @@ private:
 // Forward declaration for Rust function
 kj::Own<CxxType> modify_own_return(kj::Own<CxxType> cpp_own);
 
-kj::Own<CxxType> cpp_kj_own() { return kj::heap<CxxType>(42); }
-
-kj::Own<CxxType> null_kj_own() { return kj::Own<CxxType>(); }
-
-void give_own_back(kj::Own<CxxType> own) {
-  own->setData(37);
-  KJ_ASSERT(own->getData() == 37);
-}
-
-void modify_own_return_test() {
-  auto owned = kj::heap<CxxType>(17);
-  auto returned = modify_own_return(kj::mv(owned));
-  KJ_ASSERT(returned->getData() == 72);
-}
-
-kj::Own<CxxType> breaking_things() {
-  auto own0 = kj::heap<CxxType>(42);
-  auto own1 = kj::heap<CxxType>(72);
-  auto own2 = own0.attach(kj::mv(own1));
-  return own2;
-}
+// Function declarations
+kj::Own<CxxType> cxx_kj_own();
+kj::Own<CxxType> null_kj_own();
+void give_own_back(kj::Own<CxxType> own);
+void modify_own_return_test();
+kj::Own<CxxType> breaking_things();
 
 } // namespace kj_rs

@@ -1598,7 +1598,6 @@ fn expand_kj_own(
     let resolve = types.resolve(ident);
     let prefix = format!("cxxbridge1$kjown${}$", resolve.name.to_symbol());
 
-    let link_get = format!("{}get", prefix);
     let link_drop = format!("{}drop", prefix);
 
     let (impl_generics, ty_generics) = generics::split_for_impl(key, explicit_impl, resolve);
@@ -1621,13 +1620,6 @@ fn expand_kj_own(
                 unsafe {
                     __drop(this);
                 }
-            }
-            unsafe fn __get(this: *const ::cxx::core::ffi::c_void) -> *const Self {
-                #UnsafeExtern extern "C" {
-                    #[link_name = #link_get]
-                    fn __get(this: *const ::cxx::core::ffi::c_void) -> *const ::cxx::core::ffi::c_void;
-                }
-                unsafe { __get(this).cast() }
             }
         }
     }

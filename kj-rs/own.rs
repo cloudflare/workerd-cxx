@@ -3,7 +3,6 @@ use crate::fmt::display;
 use std::ffi::c_void;
 use std::fmt::{self, Debug, Display};
 use std::marker::PhantomData;
-use std::mem::MaybeUninit;
 use std::ops::Deref;
 use std::ops::DerefMut;
 use std::pin::Pin;
@@ -14,7 +13,9 @@ pub struct Own<T>
 where
     T: OwnTarget,
 {
-    repr: [MaybeUninit<*mut c_void>; 2],
+    disposer: *const c_void,
+    ptr: *mut T,
+    // repr: [MaybeUninit<*mut c_void>; 2],
     _ty: PhantomData<T>,
 }
 
@@ -29,9 +30,8 @@ where
     /// Returns a mutable pinned reference to the object owned by this [`Own`]
     /// if any, otherwise None.
     pub fn as_mut(&mut self) -> Option<Pin<&mut T>> {
-        let this = std::ptr::from_ref::<Self>(self).cast::<c_void>();
         unsafe {
-            let mut_reference = T::__get(this).cast_mut().as_mut()?;
+            let mut_reference = self.ptr.as_mut()?;
             Some(Pin::new_unchecked(mut_reference))
         }
     }
@@ -40,8 +40,9 @@ where
     /// otherwise None.
     #[must_use]
     pub fn as_ref(&self) -> Option<&T> {
-        let this = std::ptr::from_ref::<Self>(self).cast::<c_void>();
-        unsafe { T::__get(this).as_ref() }
+        unsafe {
+            self.ptr.as_ref()
+        }
     }
 
     /// Returns a mutable pinned reference to the object owned by this
@@ -61,8 +62,7 @@ where
     /// any, otherwise the null pointer.
     #[must_use]
     pub fn as_ptr(&self) -> *const T {
-        let this = std::ptr::from_ref::<Self>(self).cast::<c_void>();
-        unsafe { T::__get(this) }
+        self.ptr.cast()
     }
 }
 
@@ -74,8 +74,6 @@ pub unsafe trait OwnTarget {
     fn __typename(f: &mut fmt::Formatter) -> fmt::Result;
     #[doc(hidden)]
     unsafe fn __drop(repr: *mut c_void);
-    #[doc(hidden)]
-    unsafe fn __get(this: *const c_void) -> *const Self;
 }
 
 unsafe impl<T> Send for Own<T> where T: Send + OwnTarget {}
@@ -120,10 +118,10 @@ where
     T: Debug + OwnTarget,
 {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        match self.as_ref() {
-            None => formatter.write_str("nullptr"),
-            Some(value) => Debug::fmt(value, formatter),
-        }
+        formatter.debug_struct("Own")
+            .field("ptr", &self.ptr)
+            .field("disposer", &self.disposer)
+            .finish()
     }
 }
 
@@ -151,7 +149,7 @@ where
 
 // This likely fails, but only matters for this file. Automatic impls
 // are handled using a proc_macro in the macro crate.
-macro_rules! impl_kjown_target {
+macro_rules! impl_own_target {
     ($segment:expr, $name:expr, $ty:ty) => {
         unsafe impl OwnTarget for $ty {
             fn __typename(f: &mut fmt::Formatter) -> fmt::Result {
@@ -164,13 +162,6 @@ macro_rules! impl_kjown_target {
                     fn __drop(this: *mut c_void);
                 }
                 unsafe { __drop(this) }
-            }
-            unsafe fn __get(this: *const c_void) -> *const Self {
-                extern "C" {
-                    #[link_name = concat!("cxxbridge1$std$kjown$", $segment, "$get")]
-                    fn __get(this: *const c_void) -> *const c_void;
-                }
-                unsafe { __get(this) }.cast()
             }
         }
     };
