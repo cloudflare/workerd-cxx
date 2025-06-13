@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <kj/async.h>
+#include <kj/debug.h>
 #include "tests/kj-rs/lib.rs.h"
 
 namespace kj_rs {

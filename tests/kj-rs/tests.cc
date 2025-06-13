@@ -1,4 +1,5 @@
 #include "tests.h"
+#include <cassert>
 
 namespace kj_rs {
 
