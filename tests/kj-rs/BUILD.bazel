@@ -1,4 +1,4 @@
-load("@rules_rust//rust:defs.bzl", "rust_test")
+load("@rules_rust//rust:defs.bzl", "rust_test", "rust_unpretty")
 load("//tools/bazel:rust_cxx_bridge.bzl", "rust_cxx_bridge")
 
 rust_test(
@@ -23,6 +23,12 @@ rust_cxx_bridge(
         "//kj-rs",
         "@capnp-cpp//src/kj:kj-async",
     ],
+)
+
+rust_unpretty(
+    name = "test_expand",
+    testonly = True,
+    deps = [":test"]
 )
 
 cc_library(
