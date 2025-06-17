@@ -1,6 +1,9 @@
 #![allow(clippy::needless_lifetimes)]
 #![allow(clippy::missing_errors_doc)]
 #![allow(clippy::unused_async)]
+#![allow(clippy::must_use_candidate)]
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::should_panic_without_expect)]
 
 mod test_futures;
 mod test_own;
@@ -11,7 +14,8 @@ use test_futures::{
     new_ready_future_i32, new_ready_future_void, new_threaded_delay_future_void,
     new_waking_future_void, new_wrapped_waker_future_void,
 };
-use test_own::modify_own_return;
+
+use kj_rs::Own;
 
 type Result<T> = std::io::Result<T>;
 type Error = std::io::Error;
@@ -97,6 +101,11 @@ mod ffi {
         async unsafe fn lifetime_arg_void<'a>(buf: &'a [u8]);
         async unsafe fn lifetime_arg_result<'a>(buf: &'a [u8]) -> Result<()>;
     }
+}
+
+pub fn modify_own_return(mut own: Own<ffi::OpaqueCxxClass>) -> Own<ffi::OpaqueCxxClass> {
+    own.pin_mut().set_data(72);
+    own
 }
 
 pub async fn lifetime_arg_void<'a>(_buf: &'a [u8]) {}

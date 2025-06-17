@@ -1,7 +1,5 @@
 use crate::ffi;
 
-use kj_rs::Own;
-
 // Send and Sync are explicity opt-in when using cxx.
 // # Safety
 // The type `OqaqueCxxClass` contains no raw pointers or interior mutability.
@@ -10,13 +8,6 @@ unsafe impl Send for ffi::OpaqueCxxClass {}
 // # Safety
 // `OpaqueCxxClass` cannot be unsafely mutated from a shared reference.
 unsafe impl Sync for ffi::OpaqueCxxClass {}
-
-pub fn modify_own_return(mut own: Own<ffi::OpaqueCxxClass>) -> Own<ffi::OpaqueCxxClass> {
-    // Modify
-    own.pin_mut().set_data(72);
-    // Pass ownership back to C++
-    own
-}
 
 #[test]
 fn kj_own() {
