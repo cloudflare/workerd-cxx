@@ -145,11 +145,18 @@ where
     }
 }
 
-// This likely fails, but only matters for this file. Automatic impls
-// are handled using a proc_macro in the macro crate.
+// TODO: Generate bindings for primitive ffi-safe types
+// Must include the drop shim manually for each included type.
+// (Drop for primitives should be a no-op)
 macro_rules! impl_own_target {
-    ($segment:expr, $name:expr, $ty:ty) => {
+    ($ty:ty) => {
+        impl_own_target!($ty, stringify!($ty), stringify!($ty))
+    };
+    ($ty:ty, $name:expr, $segment:expr) => {
         unsafe impl OwnTarget for $ty {
+            fn __typename() -> &'static str {
+                $name
+            }
             unsafe fn __drop(this: *mut c_void) {
                 extern "C" {
                     // NOTE: the "cxxbridge1$std" prefix means the binding is *not* automatic
