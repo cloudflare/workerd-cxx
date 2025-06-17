@@ -367,40 +367,4 @@ mod tests {
         let expected: Vec<u64> = (0..(num_threads * items_per_thread)).collect();
         assert_eq!(values, expected);
     }
-
-    #[test]
-    fn test_pin_method_potential_ub() {
-        // Attempt to cause undefined behavior using only safe Rust code
-        // with the pin methods. This test explores the safety boundary
-        // of Pin::new_unchecked used in as_mut().
-
-        let mut own1 = ffi::cxx_kj_own();
-        let mut own2 = ffi::cxx_kj_own();
-
-        // Get pinned mutable references to both objects
-        let pinned1 = own1.pin_mut();
-        let pinned2 = own2.pin_mut();
-
-        // Try to use both pinned references simultaneously
-        // This should be safe since they point to different objects
-        pinned1.set_data(100);
-        pinned2.set_data(200);
-
-        // Try to create multiple pinned references to the same object
-        // through different paths
-        let mut own3 = ffi::cxx_kj_own();
-        let pinned3a = own3.pin_mut();
-        // We create a second pin, invalidating the first.
-        let pinned3b = own3.pin_mut();
-        // Uncommenting this line causes a compiler error, not UB, as intended.
-        // pinned3a.set_data(12);
-
-        // Try to move the Own while holding a pinned reference
-        // This should also be prevented by the borrow checker
-        let mut own4 = ffi::cxx_kj_own();
-        let pinned4 = own4.pin_mut();
-        let moved_own4 = own4;
-        // Uncommenting this line causes a compiler error, not UB, as intended.
-        // pinned4.set_data(143);
-    }
 }

@@ -37,6 +37,7 @@ rust_cxx_bridge(
     src = "lib.rs",
     hdrs = [
         "test-promises.h",
+        "cxx-types.h"
     ],
     include_prefix = "kj-rs-demo",
     deps = [
@@ -48,6 +49,7 @@ cc_library(
     name = "test-promises",
     srcs = [
         "test-promises.c++",
+        "cxx-types.c++"
     ],
     linkstatic = select({
         "@platforms//os:windows": True,

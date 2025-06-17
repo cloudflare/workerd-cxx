@@ -39,9 +39,7 @@ where
     /// otherwise None.
     #[must_use]
     pub fn as_ref(&self) -> Option<&T> {
-        unsafe {
-            self.ptr.as_ref()
-        }
+        unsafe { self.ptr.as_ref() }
     }
 
     /// Returns a mutable pinned reference to the object owned by this
@@ -50,12 +48,27 @@ where
     /// # Panics
     ///
     /// Panics if the [`Own`] holds a null pointer.
+    ///
+    /// ```compile_fail
+    /// let mut own = ffi::cxx_kj_own();
+    /// let pin1 = own.pin_mut();
+    /// let pin2 = own.pin_mut();
+    /// pin1.set_data(12); // Causes a compile fail, because we invalidated the first borrow
+    /// ```
+    ///
+    /// ```compile_fail
+    ///
+    /// let mut own = ffi::cxx_kj_own();
+    /// let pin = own.pin_mut();
+    /// let moved  = own;
+    /// own.set_data(143); // Compile fail, because we tried using a moved object
+    /// ```
     pub fn pin_mut(&mut self) -> Pin<&mut T> {
         match self.as_mut() {
             Some(target) => target,
             None => {
                 panic!("called pin_mut on a null Own<{}>", T::__typename());
-            },
+            }
         }
     }
 
@@ -116,7 +129,8 @@ where
     T: OwnTarget,
 {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter.debug_struct("Own")
+        formatter
+            .debug_struct("Own")
             .field("ptr", &self.ptr)
             .field("disposer", &self.disposer)
             .finish()
@@ -134,6 +148,8 @@ where
         }
     }
 }
+
+
 
 impl<T> Drop for Own<T>
 where
