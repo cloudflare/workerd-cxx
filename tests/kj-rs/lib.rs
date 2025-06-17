@@ -19,12 +19,14 @@ pub mod ffi {
 
     unsafe extern "C++" {
         include!("tests/kj-rs/tests.h");
-        include!("tests/kj-rs/cxx-types.h");
         
         async fn c_async_void_fn();
         async fn c_async_int_fn() -> i64;
         async fn c_async_struct_fn() -> Shared;
+    }
 
+    unsafe extern "C++" {
+        include!("tests/kj-rs/cxx-types.h");
         type CxxType;
 
         #[cxx_name = "getData"]
@@ -124,7 +126,7 @@ mod tests {
     }
 
     #[test]
-    fn test_pass_cc() {
+    fn test_pass_own_back() {
         let mut own = ffi::cxx_kj_own();
         own.pin_mut().set_data(14);
         ffi::give_own_back(own);

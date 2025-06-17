@@ -1625,8 +1625,8 @@ fn expand_kj_own(
     quote_spanned! {end_span=>
         #[automatically_derived]
         #unsafe_token impl #impl_generics ::kj_rs::OwnTarget for #ident #ty_generics {
-            fn __typename(f: &mut ::cxx::core::fmt::Formatter<'_>) -> ::cxx::core::fmt::Result {
-                f.write_str(#name)
+            fn __typename() -> &'static str {
+                #name
             }
             unsafe fn __drop(this: *mut ::cxx::core::ffi::c_void) {
                 #UnsafeExtern extern "C" {

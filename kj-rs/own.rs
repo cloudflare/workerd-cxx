@@ -1,5 +1,4 @@
 //! The `workerd-cxx` module containing the [`Own<T>`] type, which is bindings to the `kj::Own<T>` C++ type
-use crate::fmt::display;
 use std::ffi::c_void;
 use std::fmt::{self, Debug, Display};
 use std::marker::PhantomData;
@@ -54,7 +53,9 @@ where
     pub fn pin_mut(&mut self) -> Pin<&mut T> {
         match self.as_mut() {
             Some(target) => target,
-            None => panic!("called pin_mut on a null Own<{}>", display(T::__typename),),
+            None => {
+                panic!("called pin_mut on a null Own<{}>", T::__typename());
+            },
         }
     }
 
@@ -71,7 +72,7 @@ where
 /// Cannot be implmented outside of generated workerd-cxx code.
 pub unsafe trait OwnTarget {
     #[doc(hidden)]
-    fn __typename(f: &mut fmt::Formatter) -> fmt::Result;
+    fn __typename() -> &'static str;
     #[doc(hidden)]
     unsafe fn __drop(repr: *mut c_void);
 }
@@ -89,7 +90,7 @@ where
     fn deref(&self) -> &Self::Target {
         match self.as_ref() {
             Some(target) => target,
-            None => panic!("called deref on a null Own<{}>", display(T::__typename),),
+            None => panic!("called deref on a null Own<{}>", T::__typename()),
         }
     }
 }
@@ -101,10 +102,7 @@ where
     fn deref_mut(&mut self) -> &mut Self::Target {
         match self.as_mut() {
             Some(target) => Pin::into_inner(target),
-            None => panic!(
-                "called deref_mut on a null Own<{}>",
-                display(T::__typename),
-            ),
+            None => panic!("called deref_mut on a null Own<{}>", T::__typename()),
         }
     }
 }
@@ -115,7 +113,7 @@ impl<T> Unpin for Own<T> where T: OwnTarget {}
 
 impl<T> Debug for Own<T>
 where
-    T: Debug + OwnTarget,
+    T: OwnTarget,
 {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         formatter.debug_struct("Own")
@@ -152,9 +150,6 @@ where
 macro_rules! impl_own_target {
     ($segment:expr, $name:expr, $ty:ty) => {
         unsafe impl OwnTarget for $ty {
-            fn __typename(f: &mut fmt::Formatter) -> fmt::Result {
-                f.write_str($name)
-            }
             unsafe fn __drop(this: *mut c_void) {
                 extern "C" {
                     // NOTE: the "cxxbridge1$std" prefix means the binding is *not* automatic

@@ -15,7 +15,6 @@ pub use promise::PromiseFuture;
 pub use promise::new_callbacks_promise_future;
 
 mod awaiter;
-mod fmt;
 mod future;
 mod lazy_pin_init;
 mod promise;
