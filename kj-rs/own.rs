@@ -1,10 +1,21 @@
 //! The `workerd-cxx` module containing the [`Own<T>`] type, which is bindings to the `kj::Own<T>` C++ type
 use std::ffi::c_void;
 use std::fmt::{self, Debug, Display};
+use std::hash::{Hash, Hasher};
 use std::marker::PhantomData;
 use std::ops::Deref;
 use std::ops::DerefMut;
 use std::pin::Pin;
+
+/// Represents a type which can be held in a [`Own`] smart pointer.
+/// # Safety
+/// Cannot be implmented outside of generated workerd-cxx code.
+pub unsafe trait OwnTarget {
+    #[doc(hidden)]
+    fn __typename() -> &'static str;
+    #[doc(hidden)]
+    unsafe fn __drop(repr: *mut c_void);
+}
 
 /// A [`Own<T>`] represents the `kj::Own<T>`. It is a smart pointer to an opaque C++ type.
 #[repr(C)]
@@ -80,16 +91,6 @@ where
     }
 }
 
-/// Represents a type which can be held in a [`Own`] smart pointer.
-/// # Safety
-/// Cannot be implmented outside of generated workerd-cxx code.
-pub unsafe trait OwnTarget {
-    #[doc(hidden)]
-    fn __typename() -> &'static str;
-    #[doc(hidden)]
-    unsafe fn __drop(repr: *mut c_void);
-}
-
 unsafe impl<T> Send for Own<T> where T: Send + OwnTarget {}
 
 unsafe impl<T> Sync for Own<T> where T: Sync + OwnTarget {}
@@ -149,7 +150,45 @@ where
     }
 }
 
+impl<T> PartialEq for Own<T>
+where
+    T: PartialEq + OwnTarget,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.as_ref() == other.as_ref()
+    }
+}
 
+impl<T> Eq for Own<T> where T: Eq + OwnTarget {}
+
+impl<T> PartialOrd for Own<T>
+where
+    T: PartialOrd + OwnTarget,
+{
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        PartialOrd::partial_cmp(&self.as_ref(), &other.as_ref())
+    }
+}
+
+impl<T> Eq for Own<T> where T: Eq + OwnTarget {}
+
+impl<T> Ord for Own<T>
+where
+    T: Ord + OwnTarget,
+{
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        Ord::cmp(&self.as_ref(), &other.as_ref())
+    }
+}
+
+impl<T> Hash for Own<T>
+where
+    T: Hash + OwnTarget,
+{
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.as_ref().hash(state);
+    }
+}
 
 impl<T> Drop for Own<T>
 where
@@ -163,12 +202,17 @@ where
 
 // TODO: Generate bindings for primitive ffi-safe types
 // Must include the drop shim manually for each included type.
-// (Drop for primitives should be a no-op)
+// (Drop for primitives should be a no-op, but the Own still needs to get destroyed)
 macro_rules! impl_own_target {
+    ($($ty:ty),*) => {
+        $(
+            impl_own_target!($ty);
+        )*
+    };
     ($ty:ty) => {
         impl_own_target!($ty, stringify!($ty), stringify!($ty))
     };
-    ($ty:ty, $name:expr, $segment:expr) => {
+    ($ty:ty, $name:expr, $type:expr) => {
         unsafe impl OwnTarget for $ty {
             fn __typename() -> &'static str {
                 $name
@@ -176,7 +220,7 @@ macro_rules! impl_own_target {
             unsafe fn __drop(this: *mut c_void) {
                 extern "C" {
                     // NOTE: the "cxxbridge1$std" prefix means the binding is *not* automatic
-                    #[link_name = concat!("cxxbridge1$std$kjown$", $segment, "$drop")]
+                    #[link_name = concat!("cxxbridge1$std$kjown$", $type, "$drop")]
                     fn __drop(this: *mut c_void);
                 }
                 unsafe { __drop(this) }
@@ -184,3 +228,6 @@ macro_rules! impl_own_target {
         }
     };
 }
+
+// Reaches recursion limit and also doesn't have bindings yet
+// impl_own_target!(u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, bool);

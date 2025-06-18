@@ -40,7 +40,7 @@ mod ffi {
 
     // Helper functions to test `kj_rs::Own`
     unsafe extern "C++" {
-        include!("kj-rs-demo/cxx-types.h");
+        include!("kj-rs-demo/test-own.h");
         type OpaqueCxxClass;
 
         #[cxx_name = "getData"]

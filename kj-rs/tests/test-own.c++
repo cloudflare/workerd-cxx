@@ -1,4 +1,4 @@
-#include "cxx-types.h"
+#include "test-own.h"
 
 namespace kj_rs_demo {
 
@@ -28,4 +28,4 @@ kj::Own<OpaqueCxxClass> breaking_things() {
   return own2;
 }
 
-} // namespace kj_rs
+} // namespace kj_rs_demo
