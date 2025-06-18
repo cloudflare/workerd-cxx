@@ -129,12 +129,8 @@ impl<T> Debug for Own<T>
 where
     T: OwnTarget,
 {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        formatter
-            .debug_struct("Own")
-            .field("ptr", &self.ptr)
-            .field("disposer", &self.disposer)
-            .finish()
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "Own<{}>(ptr: {:p}, disposer: {:p})", T::__typename(), self.ptr, self.disposer)
     }
 }
 

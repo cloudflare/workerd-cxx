@@ -178,7 +178,7 @@ pub mod tests {
 
         let null_own = ffi::null_kj_own();
         let null_debug = format!("{null_own:?}");
-        assert_eq!(null_debug, "Own { ptr: 0x0, disposer: 0x0 }");
+        assert_eq!(null_debug, "Own<OpaqueCxxClass>(ptr: 0x0, disposer: 0x0)");
     }
 
     #[test]
