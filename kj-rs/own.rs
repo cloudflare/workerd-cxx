@@ -170,8 +170,6 @@ where
     }
 }
 
-impl<T> Eq for Own<T> where T: Eq + OwnTarget {}
-
 impl<T> Ord for Own<T>
 where
     T: Ord + OwnTarget,
