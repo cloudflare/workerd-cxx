@@ -1614,7 +1614,7 @@ fn expand_kj_own(
     let resolve = types.resolve(ident);
     let prefix = format!("cxxbridge1$kjown${}$", resolve.name.to_symbol());
 
-    let link_drop = format!("{}drop", prefix);
+    // let link_drop = format!("{}drop", prefix);
 
     let (impl_generics, ty_generics) = generics::split_for_impl(key, explicit_impl, resolve);
 
@@ -1628,15 +1628,15 @@ fn expand_kj_own(
             fn __typename() -> &'static str {
                 #name
             }
-            unsafe fn __drop(this: *mut ::cxx::core::ffi::c_void) {
-                #UnsafeExtern extern "C" {
-                    #[link_name = #link_drop]
-                    fn __drop(this: *mut ::cxx::core::ffi::c_void);
-                }
-                unsafe {
-                    __drop(this);
-                }
-            }
+            // unsafe fn __drop(this: *mut ::cxx::core::ffi::c_void) {
+            //     #UnsafeExtern extern "C" {
+            //         #[link_name = #link_drop]
+            //         fn __drop(this: *mut ::cxx::core::ffi::c_void);
+            //     }
+            //     unsafe {
+            //         __drop(this);
+            //     }
+            // }
         }
     }
 }

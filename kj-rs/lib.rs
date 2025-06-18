@@ -91,4 +91,13 @@ mod ffi {
         #[must_use]
         fn take_own_promise_node(self: Pin<&mut GuardedRustPromiseAwaiter>) -> OwnPromiseNode;
     }
+
+    unsafe extern "C++" {
+        include!("kj-rs/own.h");
+
+        // This is used to type-erase the own
+        type OwnVoid;
+
+        unsafe fn destroy_own(own: *mut OwnVoid);
+    }
 }

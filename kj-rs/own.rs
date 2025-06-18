@@ -7,14 +7,18 @@ use std::ops::Deref;
 use std::ops::DerefMut;
 use std::pin::Pin;
 
+use cxx::ExternType;
+
+use crate::ffi;
+
 /// Represents a type which can be held in a [`Own`] smart pointer.
 /// # Safety
 /// Cannot be implmented outside of generated workerd-cxx code.
 pub unsafe trait OwnTarget {
     #[doc(hidden)]
     fn __typename() -> &'static str;
-    #[doc(hidden)]
-    unsafe fn __drop(repr: *mut c_void);
+    // #[doc(hidden)]
+    // unsafe fn __drop(repr: *mut c_void);
 }
 
 /// A [`Own<T>`] represents the `kj::Own<T>`. It is a smart pointer to an opaque C++ type.
@@ -189,14 +193,13 @@ where
     T: OwnTarget,
 {
     fn drop(&mut self) {
-        let this = std::ptr::from_mut::<Self>(self).cast::<c_void>();
-        unsafe { T::__drop(this) }
+        let this = std::ptr::from_mut::<Self>(self).cast::<ffi::OwnVoid>();
+        unsafe { ffi::destroy_own(this); }
     }
 }
 
 // TODO: Generate bindings for primitive ffi-safe types
 // Must include the drop shim manually for each included type.
-// (Drop for primitives should be a no-op, but the Own still needs to get destroyed)
 macro_rules! impl_own_target {
     ($($ty:ty),*) => {
         $(

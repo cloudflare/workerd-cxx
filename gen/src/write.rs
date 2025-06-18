@@ -1639,14 +1639,14 @@ fn write_kj_own(out: &mut OutFile, key: NamedImplKey) {
         inner,
     );
 
-    begin_function_definition(out);
-    writeln!(
-        out,
-        "void cxxbridge1$kjown${}$drop(::kj::Own<{}> *self) noexcept {{",
-        instance, inner,
-    );
-    writeln!(out, "  self->~Own();");
-    writeln!(out, "}}");
+    // begin_function_definition(out);
+    // writeln!(
+    //     out,
+    //     "void cxxbridge1$kjown${}$drop(::kj::Own<{}> *self) noexcept {{",
+    //     instance, inner,
+    // );
+    // writeln!(out, "  self->~Own();");
+    // writeln!(out, "}}");
 }
 
 fn write_unique_ptr(out: &mut OutFile, key: NamedImplKey) {
