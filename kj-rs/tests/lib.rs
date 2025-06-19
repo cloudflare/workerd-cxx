@@ -15,7 +15,7 @@ use test_futures::{
     new_waking_future_void, new_wrapped_waker_future_void,
 };
 
-use kj_rs::Own;
+use kj_rs::repr::Own;
 
 type Result<T> = std::io::Result<T>;
 type Error = std::io::Error;
@@ -53,6 +53,9 @@ mod ffi {
         fn give_own_back(own: Own<OpaqueCxxClass>);
         fn modify_own_return_test();
         fn breaking_things() -> Own<OpaqueCxxClass>;
+
+        fn own_integer() -> Own<i64>;
+        fn own_integer_attached() -> Own<i64>;
     }
 
     // Helper function to test moving `Own` to C++

@@ -1,4 +1,6 @@
 #include "test-own.h"
+#include "kj/memory.h"
+#include <cstdint>
 
 namespace kj_rs_demo {
 
@@ -26,6 +28,16 @@ kj::Own<OpaqueCxxClass> breaking_things() {
   auto own1 = kj::heap<OpaqueCxxClass>(72);
   auto own2 = own0.attach(kj::mv(own1));
   return own2;
+}
+
+kj::Own<int64_t> own_integer() {
+  return kj::heap<int64_t>(-67582);
+}
+
+kj::Own<int64_t> own_integer_attached() {
+  auto own = kj::heap<int64_t>(-67582);
+  auto attach = kj::heap<OpaqueCxxClass>(18672483);
+  return own.attach(kj::mv(attach));
 }
 
 } // namespace kj_rs_demo

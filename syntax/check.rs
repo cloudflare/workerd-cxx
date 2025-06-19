@@ -174,7 +174,6 @@ fn check_type_kj_own(cx: &mut Check, ptr: &Ty1) {
             Some(
                 Bool | U8 | U16 | U32 | U64 | Usize | I8 | I16 | I32 | I64 | Isize | F32 | F64
             ) => {
-                cx.error(ptr, "Primitive rust types are not yet supported for kj::Own");
                 return;
             }
             _ => {}

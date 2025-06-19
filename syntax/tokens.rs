@@ -73,7 +73,7 @@ impl ToTokens for Ty1 {
                 tokens.extend(quote_spanned!(span=> ::cxx::));
             }
             "Own" => {
-                tokens.extend(quote_spanned!(span => ::kj_rs::));
+                tokens.extend(quote_spanned!(span => ::kj_rs::repr::));
             }
             "Box" => {
                 tokens.extend(quote_spanned!(span=> ::cxx::alloc::boxed::));

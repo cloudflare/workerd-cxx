@@ -26,5 +26,7 @@ kj::Own<OpaqueCxxClass> null_kj_own();
 void give_own_back(kj::Own<OpaqueCxxClass> own);
 void modify_own_return_test();
 kj::Own<OpaqueCxxClass> breaking_things();
+kj::Own<int64_t> own_integer();
+kj::Own<int64_t> own_integer_attached();
 
 } // namespace kj_rs_demo

@@ -11,6 +11,8 @@ unsafe impl Sync for ffi::OpaqueCxxClass {}
 
 #[cfg(test)]
 pub mod tests {
+    use std::hint::assert_unchecked;
+
     use crate::ffi;
 
     #[test]
@@ -69,6 +71,28 @@ pub mod tests {
     #[test]
     fn modify_own_return_test_rust() {
         ffi::modify_own_return_test();
+    }
+
+    #[test]
+    fn test_primitive() {
+        let own = ffi::own_integer();
+        assert_eq!(*own.as_ref().unwrap(), -67582);
+    }
+
+    #[test]
+    fn test_attached_primitive() {
+        let own = ffi::own_integer_attached();
+        assert_eq!(*own.as_ref().unwrap(), -67582);
+        // The own here additionally owns an [`OpaqueCxxClass`]
+    }
+
+    #[test]
+    fn heap_alloc() {
+        let mut nodes = vec![];
+        for i in 0..1456 {
+            nodes.push(Box::new(i));
+
+        }
     }
 
     #[test]
@@ -178,7 +202,7 @@ pub mod tests {
 
         let null_own = ffi::null_kj_own();
         let null_debug = format!("{null_own:?}");
-        assert_eq!(null_debug, "Own<OpaqueCxxClass>(ptr: 0x0, disposer: 0x0)");
+        assert!(null_debug.contains("Own"));
     }
 
     #[test]

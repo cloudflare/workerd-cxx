@@ -113,9 +113,6 @@ fn expand(ffi: Module, doc: Doc, attrs: OtherAttrs, apis: &[Api], types: &Types)
             ImplKey::UniquePtr(ident) => {
                 expanded.extend(expand_unique_ptr(ident, types, explicit_impl));
             }
-            ImplKey::Own(ident) => {
-                expanded.extend(expand_kj_own(ident, types, explicit_impl));
-            }
             ImplKey::SharedPtr(ident) => {
                 expanded.extend(expand_shared_ptr(ident, types, explicit_impl));
             }
@@ -125,6 +122,8 @@ fn expand(ffi: Module, doc: Doc, attrs: OtherAttrs, apis: &[Api], types: &Types)
             ImplKey::CxxVector(ident) => {
                 expanded.extend(expand_cxx_vector(ident, explicit_impl, types));
             }
+            // We do not need to generate code on the rust side for [`kj_rs::Own`]
+            ImplKey::Own(_) => (),
         }
     }
 
@@ -1600,43 +1599,6 @@ fn expand_unique_ptr(
                     __drop(&mut repr);
                 }
             }
-        }
-    }
-}
-
-fn expand_kj_own(
-    key: NamedImplKey,
-    types: &Types,
-    explicit_impl: Option<&Impl>,
-) -> TokenStream {
-    let ident = key.rust;
-    let name = ident.to_string();
-    let resolve = types.resolve(ident);
-    let prefix = format!("cxxbridge1$kjown${}$", resolve.name.to_symbol());
-
-    // let link_drop = format!("{}drop", prefix);
-
-    let (impl_generics, ty_generics) = generics::split_for_impl(key, explicit_impl, resolve);
-
-    let begin_span = explicit_impl.map_or(key.begin_span, |explicit| explicit.impl_token.span);
-    let end_span = explicit_impl.map_or(key.end_span, |explicit| explicit.brace_token.span.join());
-    let unsafe_token = format_ident!("unsafe", span = begin_span);
-
-    quote_spanned! {end_span=>
-        #[automatically_derived]
-        #unsafe_token impl #impl_generics ::kj_rs::OwnTarget for #ident #ty_generics {
-            fn __typename() -> &'static str {
-                #name
-            }
-            // unsafe fn __drop(this: *mut ::cxx::core::ffi::c_void) {
-            //     #UnsafeExtern extern "C" {
-            //         #[link_name = #link_drop]
-            //         fn __drop(this: *mut ::cxx::core::ffi::c_void);
-            //     }
-            //     unsafe {
-            //         __drop(this);
-            //     }
-            // }
         }
     }
 }

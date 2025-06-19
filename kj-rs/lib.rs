@@ -6,8 +6,6 @@ pub use crate::ffi::KjWaker;
 pub use awaiter::GuardedRustPromiseAwaiter;
 pub use awaiter::PromiseAwaiter;
 pub use future::FuturePollStatus;
-pub use own::Own;
-pub use own::OwnTarget;
 pub use promise::KjPromise;
 pub use promise::KjPromiseNodeImpl;
 pub use promise::OwnPromiseNode;
@@ -23,6 +21,7 @@ mod own;
 
 pub mod repr {
     pub use crate::future::repr::*;
+    pub use crate::own::repr::*;
 }
 
 pub type Result<T> = std::io::Result<T>;
@@ -95,9 +94,7 @@ mod ffi {
     unsafe extern "C++" {
         include!("kj-rs/own.h");
 
-        // This is used to type-erase the own
         type OwnVoid;
-
         unsafe fn destroy_own(own: *mut OwnVoid);
     }
 }
