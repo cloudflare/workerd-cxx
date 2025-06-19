@@ -51,6 +51,14 @@ impl<T> LazyPinInit<T> {
         // SAFETY: The slot is now pinned, since we will never give access to `&mut T`.
         unsafe { Pin::new_unchecked(this.value.assume_init_mut()) }
     }
+
+    pub unsafe fn get(self: &mut Self) -> Option<*mut T> {
+        if self.is_init {
+            Some(self.value.as_mut_ptr())
+        } else {
+            None
+        }
+    }
 }
 
 // TODO(now): Test, exception-handling
