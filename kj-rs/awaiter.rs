@@ -57,8 +57,8 @@ impl<Data: std::marker::Unpin> PromiseAwaiter<Data> {
             let node = this.node.take();
 
             // Safety: `awaiter` stores `rust_waker_ptr` and uses it to call `wake()`. Note that
-            // `awaiter` is `this.awaiter`, which lives before `this.option_waker`. Since struct members
-            // are dropped in declaration order, the `rust_waker_ptr` that `awaiter` stores will always
+            // `awaiter` is `this.awaiter`, which lives before `this.option_waker`. 
+            // Since we drop awaiter manually, the `rust_waker_ptr` that `awaiter` stores will always
             // be valid during its lifetime.
             //
             // We pass a mutable pointer to C++. This is safe, because our use of the OptionWaker inside
