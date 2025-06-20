@@ -69,7 +69,7 @@ impl<Data: std::marker::Unpin> PromiseAwaiter<Data> {
             // Safety: The memory slot is valid and this type ensures that it will stay pinned.
             unsafe {
                 crate::ffi::guarded_rust_promise_awaiter_new_in_place(
-                    this.awaiter.as_mut_ptr() as *mut GuardedRustPromiseAwaiter,
+                    this.awaiter.as_mut_ptr().cast::<GuardedRustPromiseAwaiter>(),
                     rust_waker_ptr,
                     node.expect("node should be Some in call to init()"),
                 );
@@ -80,7 +80,7 @@ impl<Data: std::marker::Unpin> PromiseAwaiter<Data> {
         // Safety: `this.awaiter` is pinned since `self` is pinned.
         unsafe {
             let raw = this.awaiter.assume_init_mut() as *mut GuardedRustPromiseAwaiterRepr;
-            let raw = raw as *mut GuardedRustPromiseAwaiter;
+            let raw = raw.cast::<GuardedRustPromiseAwaiter>();
             Pin::new_unchecked(&mut *raw)
         }
     }
@@ -98,7 +98,7 @@ impl<Data: std::marker::Unpin> Drop for PromiseAwaiter<Data> {
         if self.awaiter_initialized {
             unsafe {
                 crate::ffi::guarded_rust_promise_awaiter_drop_in_place(
-                    self.awaiter.as_mut_ptr() as *mut GuardedRustPromiseAwaiter
+                    self.awaiter.as_mut_ptr().cast::<GuardedRustPromiseAwaiter>()
                 );
             }
         }
