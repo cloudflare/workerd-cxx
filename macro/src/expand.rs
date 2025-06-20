@@ -122,6 +122,8 @@ fn expand(ffi: Module, doc: Doc, attrs: OtherAttrs, apis: &[Api], types: &Types)
             ImplKey::CxxVector(ident) => {
                 expanded.extend(expand_cxx_vector(ident, explicit_impl, types));
             }
+            // We do not need to generate code on the rust side for [`kj_rs::Own`]
+            ImplKey::Own(_) => (),
         }
     }
 
@@ -691,6 +693,7 @@ fn expand_cxx_function_shim(efn: &ExternFn, types: &Types) -> TokenStream {
                         quote_spanned!(span=> ::cxx::UniquePtr::from_raw(#call))
                     }
                 }
+                // TODO: KjBox match clause
                 Type::Ref(ty) => match &ty.inner {
                     Type::Ident(ident) if ident.rust == RustString => match ty.mutable {
                         false => quote_spanned!(span=> #call.as_string()),

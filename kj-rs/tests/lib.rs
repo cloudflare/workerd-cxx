@@ -1,8 +1,12 @@
 #![allow(clippy::needless_lifetimes)]
 #![allow(clippy::missing_errors_doc)]
 #![allow(clippy::unused_async)]
+#![allow(clippy::must_use_candidate)]
+#![allow(clippy::cast_possible_truncation)]
+#![allow(clippy::should_panic_without_expect)]
 
 mod test_futures;
+mod test_own;
 
 use test_futures::{
     new_awaiting_future_i32, new_error_handling_future_void_infallible, new_errored_future_void,
@@ -10,6 +14,8 @@ use test_futures::{
     new_ready_future_i32, new_ready_future_void, new_threaded_delay_future_void,
     new_waking_future_void, new_wrapped_waker_future_void,
 };
+
+use kj_rs::repr::Own;
 
 type Result<T> = std::io::Result<T>;
 type Error = std::io::Error;
@@ -30,6 +36,31 @@ mod ffi {
         async fn new_errored_promise_void();
         async fn new_ready_promise_i32(value: i32) -> i32;
         async fn new_ready_promise_shared_type() -> Shared;
+    }
+
+    // Helper functions to test `kj_rs::Own`
+    unsafe extern "C++" {
+        include!("kj-rs-demo/test-own.h");
+        type OpaqueCxxClass;
+
+        #[cxx_name = "getData"]
+        fn get_data(&self) -> u64;
+        #[cxx_name = "setData"]
+        fn set_data(self: Pin<&mut OpaqueCxxClass>, val: u64);
+
+        fn cxx_kj_own() -> Own<OpaqueCxxClass>;
+        fn null_kj_own() -> Own<OpaqueCxxClass>;
+        fn give_own_back(own: Own<OpaqueCxxClass>);
+        fn modify_own_return_test();
+        fn breaking_things() -> Own<OpaqueCxxClass>;
+
+        fn own_integer() -> Own<i64>;
+        fn own_integer_attached() -> Own<i64>;
+    }
+
+    // Helper function to test moving `Own` to C++
+    extern "Rust" {
+        fn modify_own_return(cpp_own: Own<OpaqueCxxClass>) -> Own<OpaqueCxxClass>;
     }
 
     enum CloningAction {
@@ -73,6 +104,11 @@ mod ffi {
         async unsafe fn lifetime_arg_void<'a>(buf: &'a [u8]);
         async unsafe fn lifetime_arg_result<'a>(buf: &'a [u8]) -> Result<()>;
     }
+}
+
+pub fn modify_own_return(mut own: Own<ffi::OpaqueCxxClass>) -> Own<ffi::OpaqueCxxClass> {
+    own.pin_mut().set_data(72);
+    own
 }
 
 pub async fn lifetime_arg_void<'a>(_buf: &'a [u8]) {}
