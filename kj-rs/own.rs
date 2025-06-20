@@ -7,40 +7,35 @@ pub mod repr {
     use std::ops::Deref;
     use std::ops::DerefMut;
     use std::pin::Pin;
+    use std::ptr::NonNull;
 
     use crate::ffi;
 
     /// A [`Own<T>`] represents the `kj::Own<T>`. It is a smart pointer to an opaque C++ type.
+    /// Safety:
+    /// - Passing a null `kj::Own` to rust is considered unsafe from the C++ side,
+    ///   and it is required that this invariant is upheld in C++ code.
     #[repr(C)]
     pub struct Own<T> {
         disposer: *const c_void,
-        ptr: *mut T,
+        ptr: NonNull<T>,
         _ty: PhantomData<T>,
     }
+
     /// Public-facing Own api
     impl<T> Own<T> {
         /// Returns a mutable pinned reference to the object owned by this [`Own`]
         /// if any, otherwise None.
-        pub fn as_mut(&mut self) -> Option<Pin<&mut T>> {
+        pub fn as_mut(&mut self) -> Pin<&mut T> {
+            // Safety: Passing a null kj::Own to Rust from C++ is not supported.
             unsafe {
-                let mut_reference = self.ptr.as_mut()?;
-                Some(Pin::new_unchecked(mut_reference))
+                let mut_reference = self.ptr.as_mut();
+                Pin::new_unchecked(mut_reference)
             }
-        }
-
-        /// Returns a reference to the object owned by this [`Own`] if any,
-        /// otherwise None.
-        #[must_use]
-        pub fn as_ref(&self) -> Option<&T> {
-            unsafe { self.ptr.as_ref() }
         }
 
         /// Returns a mutable pinned reference to the object owned by this
         /// [`Own`].
-        ///
-        /// # Panics
-        ///
-        /// Panics if the [`Own`] holds a null pointer.
         ///
         /// ```compile_fail
         /// let mut own = ffi::cxx_kj_own();
@@ -57,20 +52,26 @@ pub mod repr {
         /// own.set_data(143); // Compile fail, because we tried using a moved object
         /// ```
         pub fn pin_mut(&mut self) -> Pin<&mut T> {
-            match self.as_mut() {
-                Some(target) => target,
-                None => {
-                    panic!("called pin_mut on a null Own");
-                }
+            self.as_mut()
+        }
+
+        /// Returns a raw const pointer to the object owned by this [`Own`]
+        #[must_use]
+        pub fn as_ptr(&self) -> *const T {
+            self.ptr.as_ptr().cast()
+        }
+    }
+
+    impl<T> AsRef<T> for Own<T> {
+        /// Returns a reference to the object owned by this [`Own`] if any,
+        /// otherwise None.
+        fn as_ref(&self) -> &T {
+            // Safety: Passing a null kj::Own to Rust from C++ is not supported.
+            unsafe {
+                self.ptr.as_ref()
             }
         }
 
-        /// Returns a raw const pointer to the object owned by this [`Own`] if
-        /// any, otherwise the null pointer.
-        #[must_use]
-        pub fn as_ptr(&self) -> *const T {
-            self.ptr.cast()
-        }
     }
 
     unsafe impl<T> Send for Own<T> where T: Send {}
@@ -81,10 +82,7 @@ pub mod repr {
         type Target = T;
 
         fn deref(&self) -> &Self::Target {
-            match self.as_ref() {
-                Some(target) => target,
-                None => panic!("called deref on a null Own"),
-            }
+            self.as_ref()
         }
     }
 
@@ -93,16 +91,13 @@ pub mod repr {
         T: Unpin,
     {
         fn deref_mut(&mut self) -> &mut Self::Target {
-            match self.as_mut() {
-                Some(target) => Pin::into_inner(target),
-                None => panic!("called deref_mut on a null Own"),
-            }
+            Pin::into_inner(self.as_mut())
         }
     }
 
     // Own is not a self-referential type and is safe to move out of a Pin,
     // regardless whether the pointer's target is Unpin.
-    impl<T> Unpin for Own<T> where T: {}
+    impl<T> Unpin for Own<T> {}
 
     impl<T> Debug for Own<T> {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
@@ -115,10 +110,7 @@ pub mod repr {
         T: Display,
     {
         fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-            match self.as_ref() {
-                None => formatter.write_str("nullptr"),
-                Some(value) => Display::fmt(value, formatter),
-            }
+            Display::fmt(self.as_ref(), formatter)
         }
     }
 
@@ -162,9 +154,14 @@ pub mod repr {
 
     impl<T> Drop for Own<T> {
         fn drop(&mut self) {
-            let this = std::ptr::from_mut::<Self>(self).cast::<ffi::OwnVoid>();
+            unsafe extern "C" {
+                #[link_name = "cxxbridge$kjrs$own$drop"]
+                fn __drop(this: *mut c_void);
+            }
+
+            let this = std::ptr::from_mut::<Self>(self).cast::<c_void>();
             unsafe {
-                ffi::destroy_own(this);
+                __drop(this);
             }
         }
     }

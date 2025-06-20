@@ -11,7 +11,7 @@ unsafe impl Sync for ffi::OpaqueCxxClass {}
 
 #[cfg(test)]
 pub mod tests {
-    use std::hint::assert_unchecked;
+    use std::collections::HashMap;
 
     use crate::ffi;
 
@@ -52,6 +52,7 @@ pub mod tests {
         let data_ptr = own.as_ptr();
         own.pin_mut().set_data(75193);
         unsafe {
+            // This one does need to be unwrapped because it is created from a pointer
             assert_eq!(data_ptr.as_ref().unwrap().get_data(), 75193);
         }
     }
@@ -62,13 +63,6 @@ pub mod tests {
     }
 
     #[test]
-    #[should_panic]
-    fn test_panic_null() {
-        let own = ffi::null_kj_own();
-        let _ = own.get_data();
-    }
-
-    #[test]
     fn modify_own_return_test_rust() {
         ffi::modify_own_return_test();
     }
@@ -76,13 +70,13 @@ pub mod tests {
     #[test]
     fn test_primitive() {
         let own = ffi::own_integer();
-        assert_eq!(*own.as_ref().unwrap(), -67582);
+        assert_eq!(*own.as_ref(), -67582);
     }
 
     #[test]
     fn test_attached_primitive() {
         let own = ffi::own_integer_attached();
-        assert_eq!(*own.as_ref().unwrap(), -67582);
+        assert_eq!(*own.as_ref(), -67582);
         // The own here additionally owns an [`OpaqueCxxClass`]
     }
 
@@ -99,18 +93,16 @@ pub mod tests {
     fn test_own_as_ref_as_mut() {
         let mut own = ffi::cxx_kj_own();
 
-        // Test as_ref
-        assert!(own.as_ref().is_some());
-        assert_eq!(own.as_ref().unwrap().get_data(), 42);
+        assert_eq!(own.as_ref().get_data(), 42);
 
-        // Test as_mut
-        assert!(own.as_mut().is_some());
-        own.as_mut().unwrap().set_data(99);
+        own.as_mut().set_data(99);
         assert_eq!(own.get_data(), 99);
+    }
 
-        // Test null own
+    #[test]
+    fn test_null() {
         let null_own = ffi::null_kj_own();
-        assert!(null_own.as_ref().is_none());
+        assert!(null_own.as_ptr().is_null());
     }
 
     #[test]
@@ -127,7 +119,7 @@ pub mod tests {
     #[test]
     fn test_own_in_collections() {
         let mut owns_vec = Vec::new();
-        let mut owns_map = std::collections::HashMap::new();
+        let mut owns_map = HashMap::new();
 
         // Test in Vec
         for i in 0..10 {
@@ -152,20 +144,6 @@ pub mod tests {
             let key = format!("key_{i}");
             assert_eq!(owns_map[&key].get_data(), i * 100);
         }
-    }
-
-    #[test]
-    #[should_panic(expected = "called deref on a null Own")]
-    fn test_null_own_deref_panic() {
-        let null_own = ffi::null_kj_own();
-        let _ = null_own.get_data(); // Should panic via Deref
-    }
-
-    #[test]
-    #[should_panic(expected = "called pin_mut on a null Own")]
-    fn test_null_own_pin_mut_panic() {
-        let mut null_own = ffi::null_kj_own();
-        null_own.pin_mut().set_data(42); // Should panic
     }
 
     #[test]
@@ -199,10 +177,6 @@ pub mod tests {
         let own = ffi::cxx_kj_own();
         let debug_str = format!("{own:?}");
         assert!(!debug_str.is_empty());
-
-        let null_own = ffi::null_kj_own();
-        let null_debug = format!("{null_own:?}");
-        assert!(null_debug.contains("Own"));
     }
 
     #[test]
