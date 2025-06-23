@@ -1032,11 +1032,7 @@ fn write_rust_function_shim_impl(
     writeln!(out, " {{");
     sig.args.iter()
         .filter(|arg| {
-            if let Type::Own(_) = arg.ty {
-                true
-            } else {
-                false
-            }
+            matches!(arg.ty, Type::Own(_))
         }).for_each(|arg_own| {
             writeln!(out, "  KJ_ASSERT({}.get() != nullptr, \"Cannot pass a null Own to Rust\");", arg_own.name.cxx);
         });
