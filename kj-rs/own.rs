@@ -16,7 +16,7 @@ pub mod repr {
     /// - Passing a null `kj::Own` to rust is considered unsafe from the C++ side,
     ///   and it is required that this invariant is upheld in C++ code.
     /// - Currently, it is runtime asserted in the bridge macro that no null Own can be passed
-    /// to Rust
+    ///   to Rust
     #[repr(C)]
     pub struct Own<T> {
         disposer: *const c_void,
