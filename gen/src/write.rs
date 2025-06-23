@@ -1622,7 +1622,7 @@ fn write_rust_vec_impl(out: &mut OutFile, key: NamedImplKey) {
     writeln!(out, "}}");
 }
 
-// Writes the function necessary to wrap the destructor of a `kj::Own<T>`.
+// Writes an assertion that we do not use an unsupported T for `kj::Own<T>`.
 fn write_kj_own(out: &mut OutFile, key: NamedImplKey) {
     let ident = key.rust;
     let resolve = out.types.resolve(ident);
@@ -1638,15 +1638,6 @@ fn write_kj_own(out: &mut OutFile, key: NamedImplKey) {
         "static_assert(sizeof(::kj::Own<{}>) == 2 * sizeof(void *), \"Static disposers for Own are not supported in workerd-cxx\");",
         inner,
     );
-
-    // begin_function_definition(out);
-    // writeln!(
-    //     out,
-    //     "void cxxbridge1$kjown${}$drop(::kj::Own<{}> *self) noexcept {{",
-    //     instance, inner,
-    // );
-    // writeln!(out, "  self->~Own();");
-    // writeln!(out, "}}");
 }
 
 fn write_unique_ptr(out: &mut OutFile, key: NamedImplKey) {

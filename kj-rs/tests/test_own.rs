@@ -100,6 +100,7 @@ pub mod tests {
     }
 
     #[test]
+    #[should_panic]
     fn test_null() {
         let null_own = ffi::null_kj_own();
         assert!(null_own.as_ptr().is_null());
@@ -110,10 +111,6 @@ pub mod tests {
         let own = ffi::cxx_kj_own();
         let ptr = own.as_ptr();
         assert!(!ptr.is_null());
-
-        let null_own = ffi::null_kj_own();
-        let null_ptr = null_own.as_ptr();
-        assert!(null_ptr.is_null());
     }
 
     #[test]
