@@ -56,11 +56,15 @@ mod ffi {
 
         fn own_integer() -> Own<i64>;
         fn own_integer_attached() -> Own<i64>;
+
+        fn null_exception_test_driver_1() -> String;
+        fn null_exception_test_driver_2() -> String;
     }
 
     // Helper function to test moving `Own` to C++
     extern "Rust" {
         fn modify_own_return(cpp_own: Own<OpaqueCxxClass>) -> Own<OpaqueCxxClass>;
+        fn get_null() -> Own<OpaqueCxxClass>;
     }
 
     enum CloningAction {
@@ -109,6 +113,10 @@ mod ffi {
 pub fn modify_own_return(mut own: Own<ffi::OpaqueCxxClass>) -> Own<ffi::OpaqueCxxClass> {
     own.pin_mut().set_data(72);
     own
+}
+
+pub fn get_null() -> Own<ffi::OpaqueCxxClass> {
+    ffi::null_kj_own()
 }
 
 pub async fn lifetime_arg_void<'a>(_buf: &'a [u8]) {}

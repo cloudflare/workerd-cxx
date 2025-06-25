@@ -1,6 +1,5 @@
 #include "test-own.h"
-#include "kj/memory.h"
-#include <cstdint>
+#include <exception>
 
 namespace kj_rs_demo {
 
@@ -38,6 +37,24 @@ kj::Own<int64_t> own_integer_attached() {
   auto own = kj::heap<int64_t>(-67582);
   auto attach = kj::heap<OpaqueCxxClass>(18672483);
   return own.attach(kj::mv(attach));
+}
+
+rust::string null_exception_test_driver_1() {
+  try {
+      auto _ = modify_own_return(null_kj_own());
+      return rust::string("");
+  } catch (const std::exception &e) {
+      return rust::string(e.what());
+  }
+}
+
+rust::string null_exception_test_driver_2() {
+  try {
+      auto _ = get_null();
+      return rust::string("");
+  } catch (const std::exception &e) {
+      return rust::string(e.what());
+  }
 }
 
 } // namespace kj_rs_demo

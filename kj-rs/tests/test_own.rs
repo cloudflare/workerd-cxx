@@ -85,7 +85,6 @@ pub mod tests {
         let mut nodes = vec![];
         for i in 0..1456 {
             nodes.push(Box::new(i));
-
         }
     }
 
@@ -111,6 +110,12 @@ pub mod tests {
         let own = ffi::cxx_kj_own();
         let ptr = own.as_ptr();
         assert!(!ptr.is_null());
+    }
+
+    #[test]
+    fn null_exception_test() {
+        assert!(ffi::null_exception_test_driver_1().contains("Cannot pass a null Own to Rust"));
+        assert!(ffi::null_exception_test_driver_2().contains("panic in awaitables_rust::ffi::get_null"));
     }
 
     #[test]

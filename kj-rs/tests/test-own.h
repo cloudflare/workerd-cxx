@@ -3,6 +3,8 @@
 #include "kj/memory.h"
 #include <cstdint>
 #include <kj/debug.h>
+#include <rust/cxx.h>
+#include <cstdint>
 
 namespace kj_rs_demo {
 
@@ -19,6 +21,13 @@ private:
 
 // Forward declaration for Rust function, including the lib.rs.h caused problems
 kj::Own<OpaqueCxxClass> modify_own_return(kj::Own<OpaqueCxxClass> cpp_own);
+// Rust function that takes in a cpp_own. Should cause C++ exception if the own is NULL
+void null_exception_test(kj::Own<OpaqueCxxClass> cpp_own);
+// Rust function that calls `null_kj_own` and tries to return it
+kj::Own<OpaqueCxxClass> get_null();
+
+rust::String null_exception_test_driver_1();
+rust::String null_exception_test_driver_2();
 
 // Function declarations
 kj::Own<OpaqueCxxClass> cxx_kj_own();
