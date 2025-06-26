@@ -18,10 +18,12 @@ mod lazy_pin_init;
 mod promise;
 mod waker;
 mod own;
+mod rc;
 
 pub mod repr {
     pub use crate::future::repr::*;
     pub use crate::own::repr::*;
+    pub use crate::rc::repr::*;
 }
 
 pub type Result<T> = std::io::Result<T>;

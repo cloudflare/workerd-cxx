@@ -9,6 +9,7 @@ pub enum ImplKey<'a> {
     RustVec(NamedImplKey<'a>),
     UniquePtr(NamedImplKey<'a>),
     Own(NamedImplKey<'a>),
+    Rc(NamedImplKey<'a>),
     SharedPtr(NamedImplKey<'a>),
     WeakPtr(NamedImplKey<'a>),
     CxxVector(NamedImplKey<'a>),

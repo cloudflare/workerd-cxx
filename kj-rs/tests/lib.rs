@@ -67,6 +67,13 @@ mod ffi {
         fn get_null() -> Own<OpaqueCxxClass>;
     }
 
+    unsafe extern "C++" {
+        include!("kj-rs-demo/test-rc.h");
+
+        type OpaqueRefcountedCxxClass;
+        fn cxx_kj_rc() -> Rc<OpaqueRefcountedCxxClass>;
+    }
+
     enum CloningAction {
         None,
         CloneSameThread,

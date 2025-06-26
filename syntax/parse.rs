@@ -1063,6 +1063,7 @@ fn parse_impl(cx: &mut Errors, imp: ItemImpl) -> Result<Api> {
         | Type::RustVec(ty)
         | Type::UniquePtr(ty)
         | Type::Own(ty)
+        | Type::Rc(ty)
         | Type::SharedPtr(ty)
         | Type::WeakPtr(ty)
         | Type::CxxVector(ty) => match &ty.inner {
@@ -1241,6 +1242,16 @@ fn parse_type_path(ty: &TypePath) -> Result<Type> {
                             rangle: generic.gt_token,
                         })));
                     }
+                } else if ident == "Rc" && generic.args.len() == 1 {
+                    if let GenericArgument::Type(arg) = &generic.args[0] {
+                        let inner = parse_type(arg)?;
+                        return Ok(Type::Rc(Box::new(Ty1 {
+                            name: ident,
+                            langle: generic.lt_token,
+                            inner,
+                            rangle: generic.gt_token,
+                        })));
+                    }
                 } else if ident == "SharedPtr" && generic.args.len() == 1 {
                     if let GenericArgument::Type(arg) = &generic.args[0] {
                         let inner = parse_type(arg)?;
@@ -1340,7 +1351,7 @@ fn parse_type_path(ty: &TypePath) -> Result<Type> {
         ));
     }
 
-    Err(Error::new_spanned(ty, "unsupported type"))
+    Err(Error::new_spanned(ty, "ahha this unsupported type"))
 }
 
 fn parse_type_array(ty: &TypeArray) -> Result<Type> {
@@ -1492,6 +1503,7 @@ fn has_references_without_lifetime(ty: &Type) -> bool {
         | Type::RustVec(t)
         | Type::UniquePtr(t)
         | Type::Own(t)
+        | Type::Rc(t)
         | Type::SharedPtr(t)
         | Type::WeakPtr(t)
         | Type::CxxVector(t) => has_references_without_lifetime(&t.inner),

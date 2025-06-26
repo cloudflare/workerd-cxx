@@ -223,7 +223,9 @@ fn pick_includes_and_builtins(out: &mut OutFile, apis: &[Api]) {
             Type::SliceRef(_) => out.builtin.rust_slice = true,
             Type::Array(_) => out.include.array = true,
             Type::Ref(_) | Type::Void(_) | Type::Ptr(_) => {}
-            Type::Future(_) | Type::Own(_) => out.include.kj_rs = true,
+            Type::Future(_)
+            | Type::Own(_)
+            | Type::Rc(_) => out.include.kj_rs = true,
         }
     }
 }
@@ -1239,6 +1241,11 @@ fn write_type(out: &mut OutFile, ty: &Type) {
             write_type(out, &ptr.inner);
             write!(out, ">");
         }
+        Type::Rc(ptr) => {
+            write!(out, "::kj::Rc<");
+            write_type(out, &ptr.inner);
+            write!(out, ">");
+        }
         Type::SharedPtr(ptr) => {
             write!(out, "::std::shared_ptr<");
             write_type(out, &ptr.inner);
@@ -1340,6 +1347,7 @@ fn write_space_after_type(out: &mut OutFile, ty: &Type) {
         | Type::RustBox(_)
         | Type::UniquePtr(_)
         | Type::Own(_)
+        | Type::Rc(_)
         | Type::SharedPtr(_)
         | Type::WeakPtr(_)
         | Type::Str(_)
@@ -1417,6 +1425,7 @@ fn write_generic_instantiations(out: &mut OutFile) {
             ImplKey::RustVec(ident) => write_rust_vec_extern(out, ident),
             ImplKey::UniquePtr(ident) => write_unique_ptr(out, ident),
             ImplKey::Own(ident) => write_kj_own(out, ident),
+            ImplKey::Rc(ident) => write_kj_rc(out, ident),
             ImplKey::SharedPtr(ident) => write_shared_ptr(out, ident),
             ImplKey::WeakPtr(ident) => write_weak_ptr(out, ident),
             ImplKey::CxxVector(ident) => write_cxx_vector(out, ident),
@@ -1644,6 +1653,24 @@ fn write_kj_own(out: &mut OutFile, key: NamedImplKey) {
         "static_assert(sizeof(::kj::Own<{}>) == 2 * sizeof(void *), \"Static disposers for Own are not supported in workerd-cxx\");",
         inner,
     );
+}
+
+// No-op function to eventually ensure Rc's used are valid
+fn write_kj_rc(out: &mut OutFile, key: NamedImplKey) {
+    //let ident = key.rust;
+    //let resolve = out.types.resolve(ident);
+    //let inner = resolve.name.to_fully_qualified();
+    //let instance = resolve.name.to_symbol();
+    //
+    //out.include.utility = true;
+    //out.include.kj_rs = true;
+
+    //// Static disposers are not supported
+    //writeln!(
+    //    out,
+    //    "static_assert(sizeof(::kj::Own<{}>) == 2 * sizeof(void *), \"Static disposers for Own are not supported in workerd-cxx\");",
+    //    inner,
+    //);
 }
 
 fn write_unique_ptr(out: &mut OutFile, key: NamedImplKey) {

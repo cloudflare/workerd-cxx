@@ -123,7 +123,8 @@ fn expand(ffi: Module, doc: Doc, attrs: OtherAttrs, apis: &[Api], types: &Types)
                 expanded.extend(expand_cxx_vector(ident, explicit_impl, types));
             }
             // We do not need to generate code on the rust side for [`kj_rs::Own`]
-            ImplKey::Own(_) => (),
+            // Rc we may need to, but it is on hold for the moment
+            ImplKey::Own(_) | ImplKey::Rc(_) => (),
         }
     }
 

@@ -179,6 +179,7 @@ impl<'a> Types<'a> {
                 | ImplKey::RustVec(ident)
                 | ImplKey::UniquePtr(ident)
                 | ImplKey::Own(ident)
+                | ImplKey::Rc(ident)
                 | ImplKey::SharedPtr(ident)
                 | ImplKey::WeakPtr(ident)
                 | ImplKey::CxxVector(ident) => {
