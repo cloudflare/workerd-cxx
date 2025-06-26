@@ -191,15 +191,15 @@ fn check_type_kj_rc(cx: &mut Check, ptr: &Ty1) {
             return;
         }
 
-        // match Atom::from(&ident.rust) {
-        //     None => return,
-        //     Some(
-        //         Bool | U8 | U16 | U32 | U64 | Usize | I8 | I16 | I32 | I64 | Isize | F32 | F64
-        //     ) => {
-        //         return;
-        //     }
-        //     _ => {}
-        // }
+        match Atom::from(&ident.rust) {
+            None => return,
+            // Some(
+            //     Bool | U8 | U16 | U32 | U64 | Usize | I8 | I16 | I32 | I64 | Isize | F32 | F64
+            // ) => {
+            //     return;
+            // }
+            _ => {}
+        }
     }
 
     cx.error(ptr, "unsupported kj::Rc target type");

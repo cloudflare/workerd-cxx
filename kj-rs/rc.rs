@@ -1,6 +1,8 @@
 pub mod repr {
+    use crate::repr::Own;
+
     pub trait Refcounted {
-        pub fn is_shared() -> u32;
+        fn is_shared() -> u32;
     }
 
     pub struct Rc<T> {

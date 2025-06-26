@@ -8,10 +8,10 @@
 
 namespace kj_rs_demo {
 
-class OpaqueRefcountedCxxClass: kj::Refcounted {
+class OpaqueRefcountedCxxClass: public kj::Refcounted {
 public:
-  OpaqueCxxClass(uint64_t d) : data(d) {}
-  ~OpaqueCxxClass() {}
+  OpaqueRefcountedCxxClass(uint64_t d) : data(d) {}
+  ~OpaqueRefcountedCxxClass() {}
   uint64_t getData() const { return this->data; }
   void setData(uint64_t val) { this->data = val; }
 
