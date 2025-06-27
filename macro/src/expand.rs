@@ -736,7 +736,7 @@ fn expand_cxx_function_shim(efn: &ExternFn, types: &Types) -> TokenStream {
                 }
                 Type::Own(_) => quote_spanned!{span=>
                     let __temp = #call;
-                    assert!(!__temp.as_ptr().is_null());
+                    assert!(!__temp.as_ptr().is_null(), "Returning a Null kj::Own to Rust is not valid");
                     __temp
                 },
                 Type::Future(_) => {
