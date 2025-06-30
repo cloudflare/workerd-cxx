@@ -42,6 +42,10 @@ impl Type {
             if let Type::Ident(ident) = &ty.inner {
                 return Some(ImplKey::UniquePtr(NamedImplKey::new(ty, ident)));
             }
+        } else if let Type::Rc(ty) = self {
+            if let Type::Ident(ident) = &ty.inner {
+                return Some(ImplKey::Rc(NamedImplKey::new(ty, ident)));
+            }
         } else if let Type::Own(ty) = self {
             if let Type::Ident(ident) = &ty.inner {
                 return Some(ImplKey::Own(NamedImplKey::new(ty, ident)));

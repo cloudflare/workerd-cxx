@@ -1,4 +1,5 @@
 #include "test-rc.h"
+#include "kj/refcount.h"
 #include "test-own.h"
 
 namespace kj_rs_demo {

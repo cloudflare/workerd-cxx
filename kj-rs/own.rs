@@ -18,7 +18,7 @@ pub mod repr {
     /// - Currently, it is runtime asserted in the bridge macro that no null Own can be passed
     ///   to Rust
     #[repr(C)]
-    pub struct Own<T> {
+    pub struct Own<T: ?Sized> {
         disposer: *const c_void,
         ptr: NonNull<T>,
         _ty: PhantomData<T>,
@@ -151,7 +151,7 @@ pub mod repr {
         }
     }
 
-    impl<T> Drop for Own<T> {
+    impl<T: ?Sized> Drop for Own<T> {
         fn drop(&mut self) {
             unsafe extern "C" {
                 #[link_name = "cxxbridge$kjrs$own$drop"]

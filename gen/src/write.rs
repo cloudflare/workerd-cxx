@@ -1657,20 +1657,46 @@ fn write_kj_own(out: &mut OutFile, key: NamedImplKey) {
 
 // No-op function to eventually ensure Rc's used are valid
 fn write_kj_rc(out: &mut OutFile, key: NamedImplKey) {
-    //let ident = key.rust;
-    //let resolve = out.types.resolve(ident);
-    //let inner = resolve.name.to_fully_qualified();
-    //let instance = resolve.name.to_symbol();
-    //
-    //out.include.utility = true;
-    //out.include.kj_rs = true;
+    let ident = key.rust;
+    let resolve = out.types.resolve(ident);
+    let inner = resolve.name.to_fully_qualified();
+    let instance = resolve.name.to_symbol();
 
-    //// Static disposers are not supported
-    //writeln!(
-    //    out,
-    //    "static_assert(sizeof(::kj::Own<{}>) == 2 * sizeof(void *), \"Static disposers for Own are not supported in workerd-cxx\");",
-    //    inner,
-    //);
+    out.include.utility = true;
+    out.include.kj_rs = true;
+
+    writeln!(
+        out,
+        "static_assert(::std::is_base_of<::kj::Refcounted, {}>::value, \"Value must inherit from kj::Refcounted\");",
+        inner,
+    );
+
+    begin_function_definition(out);
+    writeln!(
+        out,
+        "bool cxxbridge1$kj_rs$rc${}$shared(::std::unique_ptr<{}> *ptr) noexcept {{",
+        instance, inner,
+    );
+    writeln!(out, "  return (*ptr)->isShared();");
+    writeln!(out, "}}");
+
+    // begin_function_definition(out);
+    // writeln!(
+    //     out,
+    //     "void cxxbridge1$kj_rs$rc${}$add_ref(::std::unique_ptr<{}> *ptr, {} *raw) noexcept {{",
+    //     instance, inner, inner,
+    // );
+    // writeln!(out, "  ::new (ptr) ::std::unique_ptr<{}>(raw);", inner);
+    // writeln!(out, "}}");
+
+    begin_function_definition(out);
+    writeln!(
+        out,
+        "void cxxbridge1$kj_rs$rc${}$add_ref_rc(::kj::Rc<{}> *ptr, {}* return$) noexcept {{",
+        instance, inner, inner,
+    );
+    writeln!(out, "  new (return$) ::kj::Rc(ptr->addRef());");
+    writeln!(out, "}}");
 }
 
 fn write_unique_ptr(out: &mut OutFile, key: NamedImplKey) {

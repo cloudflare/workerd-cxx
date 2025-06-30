@@ -116,6 +116,9 @@ fn expand(ffi: Module, doc: Doc, attrs: OtherAttrs, apis: &[Api], types: &Types)
             ImplKey::SharedPtr(ident) => {
                 expanded.extend(expand_shared_ptr(ident, types, explicit_impl));
             }
+            ImplKey::Rc(ident) => {
+                expanded.extend(expand_kj_rc(ident, types, explicit_impl));
+            }
             ImplKey::WeakPtr(ident) => {
                 expanded.extend(expand_weak_ptr(ident, types, explicit_impl));
             }
@@ -124,7 +127,7 @@ fn expand(ffi: Module, doc: Doc, attrs: OtherAttrs, apis: &[Api], types: &Types)
             }
             // We do not need to generate code on the rust side for [`kj_rs::Own`]
             // Rc we may need to, but it is on hold for the moment
-            ImplKey::Own(_) | ImplKey::Rc(_) => (),
+            ImplKey::Own(_) => (),
         }
     }
 
@@ -1686,6 +1689,59 @@ fn expand_shared_ptr(
                 }
                 unsafe {
                     __drop(this);
+                }
+            }
+        }
+    }
+}
+
+fn expand_kj_rc(key: NamedImplKey, types: &Types, explicit_impl: Option<&Impl>) -> TokenStream {
+    let ident = key.rust;
+    let name = ident.to_string();
+    let resolve = types.resolve(ident);
+    let prefix = format!("cxxbridge1$kj_rs$rc${}$", resolve.name.to_symbol());
+    let link_shared = format!("{}shared", prefix);
+    let link_add_ref = format!("{}add_ref", prefix);
+    let link_add_ref_rc = format!("{}add_ref_rc", prefix);
+
+    let (impl_generics, ty_generics) = generics::split_for_impl(key, explicit_impl, resolve);
+
+    let begin_span = explicit_impl.map_or(key.begin_span, |explicit| explicit.impl_token.span);
+    let end_span = explicit_impl.map_or(key.end_span, |explicit| explicit.brace_token.span.join());
+    let unsafe_token = format_ident!("unsafe", span = begin_span);
+
+    quote_spanned! {end_span=>
+        #[automatically_derived]
+        #unsafe_token impl #impl_generics ::kj_rs::repr::Refcounted for #ident #ty_generics {
+            fn is_shared(&self) -> bool {
+                #UnsafeExtern extern "C" {
+                    #[link_name = #link_shared]
+                    fn __is_shared(this: *const ::cxx::core::ffi::c_void) -> bool;
+                }
+                unsafe {
+                    __is_shared((&raw const self).cast())
+                }
+            }
+            fn add_refcount_internal(&self) -> ::kj_rs::repr::Own<Self> {
+                loop {} // Temporary - loop returns !, which can be coerced into any type
+                // #UnsafeExtern extern "C" {
+                //     #[link_name = #link_add_ref]
+                //     fn __add_ref_int(this: *const ::cxx::core::ffi::c_void) -> ;
+                // }
+                // unsafe {
+                //     __add_ref_int((&raw const self).cast())
+                // }
+            }
+            fn add_rc_refcount_internal(rc: &::kj_rs::repr::Rc<Self>) -> ::kj_rs::repr::Rc<Self> {
+                #UnsafeExtern extern "C" {
+                    #[link_name = #link_add_ref_rc]
+                    fn __add_ref_int(this: *const ::cxx::core::ffi::c_void, __return: *mut ::cxx::core::ffi::c_void);
+                }
+                unsafe {
+                     let mut __return =
+                         ::cxx::core::mem::MaybeUninit::<::kj_rs::repr::Rc<Self>>::uninit();
+                    __add_ref_int((&raw const rc).cast(), __return.as_mut_ptr().cast());
+                    __return.assume_init()
                 }
             }
         }
