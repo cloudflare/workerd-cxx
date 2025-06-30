@@ -1695,6 +1695,7 @@ fn write_kj_rc(out: &mut OutFile, key: NamedImplKey) {
         "void cxxbridge1$kj_rs$rc${}$add_ref_rc(::kj::Rc<{}> *ptr, {}* return$) noexcept {{",
         instance, inner, inner,
     );
+    // Inefficient and doesn't follow 1-1 with the kj::Refcounted class. The function that we would want to use directly is private.
     writeln!(out, "  new (return$) ::kj::Rc(ptr->addRef());");
     writeln!(out, "}}");
 }
