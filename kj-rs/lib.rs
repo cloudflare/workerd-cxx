@@ -12,11 +12,13 @@ pub use promise::new_callbacks_promise_future;
 
 mod awaiter;
 mod future;
+mod maybe;
 mod promise;
 mod waker;
 
 pub mod repr {
     pub use crate::future::repr::*;
+    pub use crate::maybe::repr::*;
 }
 
 pub type Result<T> = std::io::Result<T>;

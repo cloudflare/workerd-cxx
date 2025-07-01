@@ -21,6 +21,12 @@ mod ffi {
     }
 
     unsafe extern "C++" {
+        include!("kj-rs-demo/test-maybe.h");
+
+        fn shared_access(shared: Shared) -> Maybe<i64>;
+    }
+
+    unsafe extern "C++" {
         include!("kj-rs-demo/test-promises.h");
 
         async fn new_ready_promise_void();

@@ -299,6 +299,7 @@ pub enum Type {
     CxxVector(Box<Ty1>),
     Fn(Box<Signature>),
     Void(Span),
+    Maybe(Box<Ty1>),
     SliceRef(Box<SliceRef>),
     Array(Box<Array>),
     Future(Box<Future>),

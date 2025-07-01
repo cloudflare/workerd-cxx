@@ -34,7 +34,7 @@ impl<'a> Types<'a> {
             Type::Ref(ty) => self.determine_improper_ctype(&ty.inner),
             Type::Ptr(ty) => self.determine_improper_ctype(&ty.inner),
             Type::Array(ty) => self.determine_improper_ctype(&ty.inner),
-            Type::Future(_) => todo!("file a workerd-cxx ticket"),
+            Type::Future(_) | Type::Maybe(_) => todo!("file a workerd-cxx ticket"),
         }
     }
 }
