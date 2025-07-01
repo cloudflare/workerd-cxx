@@ -1,4 +1,10 @@
 //! The `workerd-cxx` module containing the [`Own<T>`] type, which is bindings to the `kj::Own<T>` C++ type
+
+use static_assertions::{assert_eq_align, assert_eq_size};
+
+assert_eq_size!(repr::Own<()>, [*const (); 2]);
+assert_eq_align!(repr::Own<()>, *const ());
+
 pub mod repr {
     use std::ffi::c_void;
     use std::fmt::{self, Debug, Display};
