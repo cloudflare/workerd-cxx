@@ -1,18 +1,50 @@
 //! The `workerd-cxx` module containing the [`Own<T>`] type, which is bindings to the `kj::Own<T>` C++ type
 
 use static_assertions::{assert_eq_align, assert_eq_size};
+use std::fmt;
 
 assert_eq_size!(repr::Own<()>, [*const (); 2]);
 assert_eq_align!(repr::Own<()>, *const ());
 
+/// of being not null only in direct `Own<T>`, not Maybe<Own<T>>, because some ugly private types
+/// are better than undefined behavior
+#[repr(transparent)]
+pub(crate) struct NonNullExceptMaybe<T>(pub(crate) *mut T);
+
+impl<T> NonNullExceptMaybe<T> {
+    pub fn as_ptr(&self) -> *const T {
+        self.0.cast()
+    }
+
+    pub unsafe fn as_ref(&self) -> &T {
+        // Safety:
+        //     This value will only be null when in a [`Maybe<T>`], which does niche value optimization
+        //     for a null pointer, so the inner [`Own<T>`] can never be accessed
+        unsafe { self.0.as_ref().unwrap() }
+    }
+
+    pub unsafe fn as_mut(&mut self) -> &mut T {
+        // Safety:
+        //     This value will only be null when in a [`Maybe<T>`], which does niche value optimization
+        //     for a null pointer, so the inner [`Own<T>`] can never be accessed.
+        unsafe { self.0.as_mut().unwrap() }
+    }
+}
+
+impl<T> fmt::Pointer for NonNullExceptMaybe<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fmt::Pointer::fmt(&self.0, f)
+    }
+}
+
 pub mod repr {
+    use super::NonNullExceptMaybe;
     use std::ffi::c_void;
     use std::fmt::{self, Debug, Display};
     use std::hash::{Hash, Hasher};
     use std::ops::Deref;
     use std::ops::DerefMut;
     use std::pin::Pin;
-    use std::ptr::NonNull;
 
     /// A [`Own<T>`] represents the `kj::Own<T>`. It is a smart pointer to an opaque C++ type.
     /// Safety:
@@ -22,10 +54,11 @@ pub mod repr {
     ///   to Rust
     #[repr(C)]
     pub struct Own<T> {
-        disposer: *const c_void,
-        ptr: NonNull<T>,
+        pub(crate) disposer: *const c_void,
+        pub(crate) ptr: NonNullExceptMaybe<T>,
     }
 
+    /// This type allows me to expose the same API that [`NonNull`] does while maintaining the invariant
     /// Public-facing Own api
     impl<T> Own<T> {
         /// Returns a mutable pinned reference to the object owned by this [`Own`]

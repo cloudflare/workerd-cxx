@@ -128,7 +128,10 @@ fn expand(ffi: Module, doc: Doc, attrs: OtherAttrs, apis: &[Api], types: &Types)
             ImplKey::CxxVector(ident) => {
                 expanded.extend(expand_cxx_vector(ident, explicit_impl, types));
             }
-            // We do not need to generate code on the rust side for [`kj_rs::Own`]
+            ImplKey::Maybe(ident) => {
+                expanded.extend(expand_kj_maybe(ident, explicit_impl, types));
+            }
+            // We do not yet need to generate code on the rust side for [`kj_rs::Own`]
             ImplKey::Own(_) => (),
         }
     }
@@ -647,7 +650,7 @@ fn expand_cxx_function_shim(efn: &ExternFn, types: &Types) -> TokenStream {
     let call = if indirect_return {
         let ret = expand_extern_type(efn.ret.as_ref().unwrap(), types, true);
         setup.extend(quote_spanned! {span=>
-            let mut __return = ::cxx::core::mem::MaybeUninit::<#ret>::uninit();
+            let mut __return = ::cxx::core::mem::MaybeUninit::<#ret>::zeroed();
         });
         setup.extend(if efn.throws {
             quote_spanned! {span=>
@@ -1795,6 +1798,35 @@ fn expand_weak_ptr(key: NamedImplKey, types: &Types, explicit_impl: Option<&Impl
                 }
             }
         }
+    }
+}
+
+fn expand_kj_maybe(key: NamedImplKey, explicit_impl: Option<&Impl>, types: &Types) -> TokenStream {
+    let elem = key.rust;
+    let _name = elem.to_string();
+    let resolve = types.resolve(elem);
+    let prefix = format!("cxxbridge1$kj_rs$maybe${}$", resolve.name.to_symbol());
+    let _link_drop = format!("{}drop", prefix);
+
+    let (_impl_generics, _ty_generics) = generics::split_for_impl(key, explicit_impl, resolve);
+
+    let begin_span = explicit_impl.map_or(key.begin_span, |explicit| explicit.impl_token.span);
+    let end_span = explicit_impl.map_or(key.end_span, |explicit| explicit.brace_token.span.join());
+    let _unsafe_token = format_ident!("unsafe", span = begin_span);
+
+    quote_spanned! {end_span =>
+        // #[automatically_derived]
+        // #unsafe_token impl kj_rs::repr::MaybeItem for #elem #ty_generics {
+            // #unsafe_token fn __drop(item: *mut ()) {
+                // #UnsafeExtern extern "C" {
+                    // #[link_name = #link_drop]
+                    // fn __maybe_drop(this: *mut ::cxx::core::ffi::c_void);
+                // }
+                // unsafe {
+                    // __maybe_drop(item.cast());
+                // }
+            // }
+        // }
     }
 }
 
