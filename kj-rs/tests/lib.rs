@@ -4,6 +4,7 @@
 #![allow(clippy::must_use_candidate)]
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::should_panic_without_expect)]
+#![allow(clippy::missing_panics_doc)]
 
 mod test_futures;
 mod test_own;
@@ -123,6 +124,9 @@ pub fn get_null() -> Own<ffi::OpaqueCxxClass> {
 
 pub fn take_own(cpp_own: Own<ffi::OpaqueCxxClass>) {
     assert_eq!(cpp_own.get_data(), 14);
+    // The point of this function is to drop the [`Own`] from rust and this makes
+    // it explicit, while avoiding a clippy lint
+    std::mem::drop(cpp_own);
 }
 
 pub async fn lifetime_arg_void<'a>(_buf: &'a [u8]) {}
