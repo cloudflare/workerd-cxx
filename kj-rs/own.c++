@@ -1,7 +1,5 @@
 #include "own.h"
 
-namespace kj_rs {
-
 extern "C" {
 // As of right now, this function works and passes all tests, destroying all tested objects correctly.
 // This works because disposers work by virtual call, and the disposer is created during creation of
@@ -11,5 +9,3 @@ void cxxbridge$kjrs$own$drop(void *own) {
   reinterpret_cast<kj::Own<void> *>(own)->~Own();
 }
 }
-
-} // namespace kj_rs

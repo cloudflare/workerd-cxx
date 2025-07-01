@@ -59,11 +59,13 @@ mod ffi {
 
         fn null_exception_test_driver_1() -> String;
         fn null_exception_test_driver_2() -> String;
+        fn rust_take_own_driver();
     }
 
     // Helper function to test moving `Own` to C++
     extern "Rust" {
         fn modify_own_return(cpp_own: Own<OpaqueCxxClass>) -> Own<OpaqueCxxClass>;
+        fn take_own(cpp_own: Own<OpaqueCxxClass>);
         fn get_null() -> Own<OpaqueCxxClass>;
     }
 
@@ -117,6 +119,10 @@ pub fn modify_own_return(mut own: Own<ffi::OpaqueCxxClass>) -> Own<ffi::OpaqueCx
 
 pub fn get_null() -> Own<ffi::OpaqueCxxClass> {
     ffi::null_kj_own()
+}
+
+pub fn take_own(cpp_own: Own<ffi::OpaqueCxxClass>) {
+    assert_eq!(cpp_own.get_data(), 14);
 }
 
 pub async fn lifetime_arg_void<'a>(_buf: &'a [u8]) {}

@@ -3,13 +3,10 @@ pub mod repr {
     use std::ffi::c_void;
     use std::fmt::{self, Debug, Display};
     use std::hash::{Hash, Hasher};
-    use std::marker::PhantomData;
     use std::ops::Deref;
     use std::ops::DerefMut;
     use std::pin::Pin;
     use std::ptr::NonNull;
-
-    use crate::ffi;
 
     /// A [`Own<T>`] represents the `kj::Own<T>`. It is a smart pointer to an opaque C++ type.
     /// Safety:
@@ -21,7 +18,6 @@ pub mod repr {
     pub struct Own<T> {
         disposer: *const c_void,
         ptr: NonNull<T>,
-        _ty: PhantomData<T>,
     }
 
     /// Public-facing Own api
@@ -94,8 +90,8 @@ pub mod repr {
         }
     }
 
-    // Own is not a self-referential type and is safe to move out of a Pin,
-    // regardless whether the pointer's target is Unpin.
+    // Own<T> is safe to implement Unpin because moving the Own doesn't move the pointee, and
+    // the drop implentation doesn't depend on the Own's location, because it's handed by virtual dispatch
     impl<T> Unpin for Own<T> {}
 
     impl<T> Debug for Own<T> {

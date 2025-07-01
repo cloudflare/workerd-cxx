@@ -25,9 +25,12 @@ kj::Own<OpaqueCxxClass> modify_own_return(kj::Own<OpaqueCxxClass> cpp_own);
 void null_exception_test(kj::Own<OpaqueCxxClass> cpp_own);
 // Rust function that calls `null_kj_own` and tries to return it
 kj::Own<OpaqueCxxClass> get_null();
+// Rust function that takes ownweship and drops it
+void take_own(kj::Own<OpaqueCxxClass> cpp_own);
 
 rust::String null_exception_test_driver_1();
 rust::String null_exception_test_driver_2();
+void rust_take_own_driver();
 
 // Function declarations
 kj::Own<OpaqueCxxClass> cxx_kj_own();

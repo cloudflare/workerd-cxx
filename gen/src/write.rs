@@ -1628,7 +1628,7 @@ fn write_rust_vec_impl(out: &mut OutFile, key: NamedImplKey) {
     writeln!(out, "}}");
 }
 
-// Writes an assertion that we do not use an unsupported T for `kj::Own<T>`.
+// Writes static assertion that we do not use an Own with a static disposer
 fn write_kj_own(out: &mut OutFile, key: NamedImplKey) {
     let ident = key.rust;
     let resolve = out.types.resolve(ident);
@@ -1638,10 +1638,15 @@ fn write_kj_own(out: &mut OutFile, key: NamedImplKey) {
     out.include.utility = true;
     out.include.kj_rs = true;
 
-    // Static disposers are not supported
+    // Static disposers are not supported, only Owns containing 2 pointers are allowed
     writeln!(
         out,
         "static_assert(sizeof(::kj::Own<{}>) == 2 * sizeof(void *), \"Static disposers for Own are not supported in workerd-cxx\");",
+        inner,
+    );
+    writeln!(
+        out,
+        "static_assert(alignof(::kj::Own<{}>) == sizeof(void *), \"Static disposers for Own are not supported in workerd-cxx\");",
         inner,
     );
 }

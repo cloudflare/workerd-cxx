@@ -40,6 +40,11 @@ pub mod tests {
     }
 
     #[test]
+    fn rust_take_own() {
+        ffi::rust_take_own_driver();
+    }
+
+    #[test]
     fn test_pass_own_back() {
         let mut own = ffi::cxx_kj_own();
         own.pin_mut().set_data(14);

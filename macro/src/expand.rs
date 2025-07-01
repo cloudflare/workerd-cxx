@@ -693,7 +693,6 @@ fn expand_cxx_function_shim(efn: &ExternFn, types: &Types) -> TokenStream {
                         quote_spanned!(span=> ::cxx::UniquePtr::from_raw(#call))
                     }
                 }
-                // TODO: KjBox match clause
                 Type::Ref(ty) => match &ty.inner {
                     Type::Ident(ident) if ident.rust == RustString => match ty.mutable {
                         false => quote_spanned!(span=> #call.as_string()),

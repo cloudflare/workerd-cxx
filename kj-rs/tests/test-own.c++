@@ -1,4 +1,5 @@
 #include "test-own.h"
+#include "kj/string.h"
 #include <exception>
 
 namespace kj_rs_demo {
@@ -55,6 +56,11 @@ rust::string null_exception_test_driver_2() {
   } catch (const std::exception &e) {
       return rust::string(e.what());
   }
+}
+
+void rust_take_own_driver() {
+  auto own = kj::heap<OpaqueCxxClass>(14);
+  take_own(kj::mv(own));
 }
 
 } // namespace kj_rs_demo
