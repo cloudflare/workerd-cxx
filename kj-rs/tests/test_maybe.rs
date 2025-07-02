@@ -5,7 +5,11 @@ pub mod tests {
 
     #[test]
     fn test_shared() {
-        let maybe: Maybe<i64> = ffi::shared_access(ffi::Shared { i: 14 });
-        std::mem::forget(maybe);
+        let maybe: Maybe<i64> = ffi::return_maybe();
+        println!("{}", unsafe { std::mem::transmute_copy::<Maybe<i64>, [u8; 16]>(&maybe) }
+            .into_iter()
+            .map(|c| format!("{c:02}"))
+            .collect::<String>());
+        assert!(!maybe.is_none());
     }
 }

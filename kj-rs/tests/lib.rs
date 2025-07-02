@@ -36,7 +36,7 @@ mod ffi {
     unsafe extern "C++" {
         include!("kj-rs-demo/test-maybe.h");
 
-        fn shared_access(shared: Shared) -> Maybe<i64>;
+        fn return_maybe() -> Maybe<i64>;
     }
 
     enum CloningAction {

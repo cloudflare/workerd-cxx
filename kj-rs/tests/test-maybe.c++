@@ -5,10 +5,9 @@
 
 namespace kj_rs_demo {
 
-kj::Maybe<int64_t> shared_access(Shared shared) {
+kj::Maybe<int64_t> return_maybe() {
     kj::Maybe<int64_t> ret = kj::some(14);
-    KJ_ASSERT(false);
-    return ret;
+    return kj::mv(ret);
 }
 
 }  // namespace kj_rs_demo
