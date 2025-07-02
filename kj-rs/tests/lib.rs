@@ -21,12 +21,6 @@ mod ffi {
     }
 
     unsafe extern "C++" {
-        include!("kj-rs-demo/test-maybe.h");
-
-        fn shared_access(shared: Shared) -> Maybe<i64>;
-    }
-
-    unsafe extern "C++" {
         include!("kj-rs-demo/test-promises.h");
 
         async fn new_ready_promise_void();
@@ -36,6 +30,12 @@ mod ffi {
         async fn new_errored_promise_void();
         async fn new_ready_promise_i32(value: i32) -> i32;
         async fn new_ready_promise_shared_type() -> Shared;
+    }
+
+    unsafe extern "C++" {
+        include!("kj-rs-demo/test-maybe.h");
+
+        fn shared_access(shared: Shared) -> Maybe<i64>;
     }
 
     enum CloningAction {

@@ -1,5 +1,9 @@
 #pragma once
 
+namespace kj_rs_demo {
+  struct Shared;
+}
+
 #include "kj-rs-demo/lib.rs.h"
 
 #include "kj/common.h"
