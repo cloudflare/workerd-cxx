@@ -3,6 +3,7 @@
 #![allow(clippy::unused_async)]
 
 mod test_futures;
+mod test_maybe;
 
 use test_futures::{
     new_awaiting_future_i32, new_error_handling_future_void_infallible, new_errored_future_void,
