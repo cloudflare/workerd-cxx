@@ -1649,6 +1649,11 @@ fn write_kj_own(out: &mut OutFile, key: NamedImplKey) {
         "static_assert(alignof(::kj::Own<{}>) == sizeof(void *), \"Static disposers for Own are not supported in workerd-cxx\");",
         inner,
     );
+    writeln!(
+        out,
+        "static_assert(!::std::is_base_of<::kj::Refcounted, {}>::value, \"Value must not inherit from kj::Refcounted\");",
+        inner
+    );
 }
 
 fn write_unique_ptr(out: &mut OutFile, key: NamedImplKey) {
