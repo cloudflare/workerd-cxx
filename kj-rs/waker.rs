@@ -19,7 +19,10 @@ unsafe impl Sync for KjWaker {}
 
 impl From<&KjWaker> for Waker {
     fn from(waker: &KjWaker) -> Self {
-        let waker = RawWaker::new(std::ptr::from_ref::<KjWaker>(waker).cast::<()>(), &KJ_WAKER_VTABLE);
+        let waker = RawWaker::new(
+            std::ptr::from_ref::<KjWaker>(waker).cast::<()>(),
+            &KJ_WAKER_VTABLE,
+        );
         // Safety: KjWaker's Rust-exposed interface is Send and Sync and its RawWakerVTable
         // implementation functions are all thread-safe.
         //
@@ -82,14 +85,3 @@ static KJ_WAKER_VTABLE: RawWakerVTable = RawWakerVTable::new(
     kj_waker_wake_by_ref,
     kj_waker_drop,
 );
-
-/// If `waker` wraps a `KjWaker`, return the `KjWaker` pointer it was originally constructed with,
-/// or null if `waker` does not wrap a `KjWaker`. Note that the `KjWaker` pointer originally used
-/// to construct `waker` may itself by null.
-pub fn try_into_kj_waker_ptr(waker: &Waker) -> *const KjWaker {
-    if waker.vtable() == &KJ_WAKER_VTABLE {
-        waker.data().cast::<KjWaker>()
-    } else {
-        std::ptr::null()
-    }
-}

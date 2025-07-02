@@ -43,13 +43,6 @@ class KjWaker {
 
   // Drop this waker.
   virtual void drop() const = 0;
-
-  // If this KjWaker implementation has an associated FuturePollEvent, C++ code can request access
-  // to it here. The RustPromiseAwaiter class (which helps Rust `.await` KJ Promises) uses this to
-  // optimize awaits, when possible.
-  virtual kj::Maybe<FuturePollEvent&> tryGetFuturePollEvent() const {
-    return kj::none;
-  }
 };
 
 // =======================================================================================

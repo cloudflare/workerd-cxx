@@ -1,10 +1,10 @@
 use awaiter::OptionWaker;
-use awaiter::PtrGuardedRustPromiseAwaiter;
+use awaiter::PtrRustPromiseAwaiter;
 use awaiter::WakerRef;
 
 pub use crate::ffi::KjWaker;
-pub use awaiter::GuardedRustPromiseAwaiter;
 pub use awaiter::PromiseAwaiter;
+pub use awaiter::RustPromiseAwaiter;
 pub use future::FuturePollStatus;
 pub use promise::KjPromise;
 pub use promise::KjPromiseNodeImpl;
@@ -37,7 +37,7 @@ mod ffi {
         // does not allow us to export types defined outside this crate, such as Waker, directly.
         //
         // `LazyRustPromiseAwaiter` (the implementation of `.await` syntax/the IntoFuture trait),
-        // stores a OptionWaker immediately after `GuardedRustPromiseAwaiter` in declaration order.
+        // stores a OptionWaker immediately after `RustPromiseAwaiter` in declaration order.
         // pass the Waker to the `RustPromiseAwaiter` class, which is implemented in C++
         type OptionWaker;
         fn set(&mut self, waker: &WakerRef);
@@ -69,23 +69,19 @@ mod ffi {
     unsafe extern "C++" {
         include!("kj-rs/awaiter.h");
 
-        type GuardedRustPromiseAwaiter = crate::GuardedRustPromiseAwaiter;
-        type PtrGuardedRustPromiseAwaiter = crate::PtrGuardedRustPromiseAwaiter;
+        type RustPromiseAwaiter = crate::RustPromiseAwaiter;
+        type PtrRustPromiseAwaiter = crate::PtrRustPromiseAwaiter;
 
-        unsafe fn guarded_rust_promise_awaiter_new_in_place(
-            ptr: PtrGuardedRustPromiseAwaiter,
+        unsafe fn rust_promise_awaiter_new_in_place(
+            ptr: PtrRustPromiseAwaiter,
             rust_waker_ptr: *mut OptionWaker,
             node: OwnPromiseNode,
         );
-        unsafe fn guarded_rust_promise_awaiter_drop_in_place(ptr: PtrGuardedRustPromiseAwaiter);
+        unsafe fn rust_promise_awaiter_drop_in_place(ptr: PtrRustPromiseAwaiter);
 
-        unsafe fn poll(
-            self: Pin<&mut GuardedRustPromiseAwaiter>,
-            waker: &WakerRef,
-            maybe_kj_waker: *const KjWaker,
-        ) -> bool;
+        unsafe fn poll(self: Pin<&mut RustPromiseAwaiter>, waker: &WakerRef) -> bool;
 
         #[must_use]
-        fn take_own_promise_node(self: Pin<&mut GuardedRustPromiseAwaiter>) -> OwnPromiseNode;
+        fn take_own_promise_node(self: Pin<&mut RustPromiseAwaiter>) -> OwnPromiseNode;
     }
 }
