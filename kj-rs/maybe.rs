@@ -2,7 +2,7 @@ pub mod repr {
     use std::mem::MaybeUninit;
 
     use static_assertions::assert_eq_size;
-    pub struct Ptr;
+    pub struct Niche;
 
     pub trait IsNull {
         fn is_null(&self) -> bool;
@@ -48,15 +48,15 @@ pub mod repr {
         }
     }
 
-    impl<T: IsNull> Maybe<T, Ptr> {
+    impl<T: IsNull> Maybe<T, Niche> {
         pub fn is_some(&self) -> bool {
-            unsafe {
-                return self.some.assume_init_read().is_null();
-            }
+            return !self.is_none();
         }
 
         pub fn is_none(&self) -> bool {
-            return !self.is_some();
+            unsafe {
+                return self.some.assume_init_read().is_null();
+            }
         }
     }
 
@@ -66,7 +66,7 @@ pub mod repr {
     // }
 
     assert_eq_size!(Maybe<isize>, [usize; 2]);
-    assert_eq_size!(Maybe<&isize, Ptr>, usize);
+    assert_eq_size!(Maybe<&isize, Niche>, usize);
 
     // #[repr(C, usize)]
     // pub enum Maybe<T> {
@@ -103,7 +103,9 @@ pub mod repr {
     impl<T> From<Maybe<T>> for Option<T> {
         fn from(value: Maybe<T>) -> Self {
             if value.is_some() {
-                Some(value.value)
+                unsafe {
+                    Some(value.some.assume_init())
+                }
             } else {
                 None
             }

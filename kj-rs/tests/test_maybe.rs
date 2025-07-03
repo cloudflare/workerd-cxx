@@ -4,12 +4,20 @@ pub mod tests {
     use kj_rs::repr::Maybe;
 
     #[test]
-    fn test_shared() {
+    fn test_some() {
         let maybe: Maybe<i64> = ffi::return_maybe();
-        println!("{}", unsafe { std::mem::transmute_copy::<Maybe<i64>, [u8; 16]>(&maybe) }
-            .into_iter()
-            .map(|c| format!("{c:02}"))
-            .collect::<String>());
         assert!(!maybe.is_none());
+    }
+
+    #[test]
+    fn test_none() {
+        let maybe: Maybe<i64> = ffi::return_maybe_none();
+        assert!(maybe.is_none());
+    }
+
+    #[test]
+    fn test_none_ref() {
+        let maybe = ffi::return_maybe_ref();
+        assert!(maybe.is_none());
     }
 }

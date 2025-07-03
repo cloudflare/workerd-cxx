@@ -10,4 +10,13 @@ kj::Maybe<int64_t> return_maybe() {
     return kj::mv(ret);
 }
 
+kj::Maybe<int64_t> return_maybe_none() {
+    kj::Maybe<int64_t> ret = kj::none;
+    return kj::mv(ret);
+}
+
+kj::Maybe<int64_t const*> return_maybe_ref() {
+    return kj::none;
+}
+
 }  // namespace kj_rs_demo

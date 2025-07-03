@@ -209,19 +209,30 @@ fn check_type_weak_ptr(cx: &mut Check, ptr: &Ty1) {
 }
 
 fn check_type_kj_maybe(cx: &mut Check, ptr: &Ty1) {
-    if let Type::Ident(ident) = &ptr.inner {
-        if cx.types.rust.contains(&ident.rust) {
-            cx.error(ptr, "kj::Maybe of a Rust type is not supported yet");
-            return;
-        }
+    match &ptr.inner {
+        Type::Ident(ident) => {
+            if cx.types.rust.contains(&ident.rust) {
+                cx.error(ptr, "kj::Maybe of a Rust type is not supported yet");
+                return;
+            }
 
-        match Atom::from(&ident.rust) {
-            None
-            | Some(
-                Bool | U8 | U16 | U32 | U64 | Usize | I8 | I16 | I32 | I64 | Isize | F32 | F64
-            ) => return,
-            Some(_) => {}
+            match Atom::from(&ident.rust) {
+                None
+                | Some(
+                    Bool | U8 | U16 | U32 | U64 | Usize | I8 | I16 | I32 | I64 | Isize | F32 | F64,
+                ) => return,
+                Some(_) => {}
+            }
         }
+        Type::Ptr(ptr) => {
+            return;
+            todo!();
+        }
+        Type::Ref(refr) => {
+            return;
+            todo!();
+        }
+        _ => (),
     }
     cx.error(ptr, "unsupported kj::Maybe target type");
 }

@@ -37,6 +37,8 @@ mod ffi {
         include!("kj-rs-demo/test-maybe.h");
 
         fn return_maybe() -> Maybe<i64>;
+        fn return_maybe_none() -> Maybe<i64>;
+        fn return_maybe_ref() -> Maybe<*const i64>;
     }
 
     enum CloningAction {
