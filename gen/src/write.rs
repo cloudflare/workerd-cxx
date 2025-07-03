@@ -223,7 +223,9 @@ fn pick_includes_and_builtins(out: &mut OutFile, apis: &[Api]) {
             Type::SliceRef(_) => out.builtin.rust_slice = true,
             Type::Array(_) => out.include.array = true,
             Type::Ref(_) | Type::Void(_) | Type::Ptr(_) => {}
-            Type::Future(_) | Type::Own(_) => out.include.kj_rs = true,
+            Type::Future(_)
+            | Type::Maybe(_)
+            | Type::Own(_) => out.include.kj_rs = true,
         }
     }
 }
@@ -1249,6 +1251,11 @@ fn write_type(out: &mut OutFile, ty: &Type) {
             write_type(out, &ptr.inner);
             write!(out, ">");
         }
+        Type::Maybe(ptr) => {
+            write!(out, "::kj::Maybe<");
+            write_type(out, &ptr.inner);
+            write!(out, ">");
+        }
         Type::CxxVector(ty) => {
             write!(out, "::std::vector<");
             write_type(out, &ty.inner);
@@ -1343,6 +1350,7 @@ fn write_space_after_type(out: &mut OutFile, ty: &Type) {
         | Type::SharedPtr(_)
         | Type::WeakPtr(_)
         | Type::Str(_)
+        | Type::Maybe(_)
         | Type::CxxVector(_)
         | Type::RustVec(_)
         | Type::SliceRef(_)

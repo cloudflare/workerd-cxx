@@ -12,12 +12,14 @@ pub use promise::new_callbacks_promise_future;
 
 mod awaiter;
 mod future;
+mod maybe;
 mod promise;
 mod waker;
 mod own;
 
 pub mod repr {
     pub use crate::future::repr::*;
+    pub use crate::maybe::repr::*;
     pub use crate::own::repr::*;
 }
 

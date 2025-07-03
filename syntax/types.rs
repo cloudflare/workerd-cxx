@@ -246,7 +246,9 @@ impl<'a> Types<'a> {
             Type::RustBox(_)
             | Type::UniquePtr(_) => false,
             Type::Array(_) => true,
-            Type::Future(_) | Type::Own(_) => true,
+            Type::Future(_)
+            | Type::Maybe(_)
+            | Type::Own(_) => true,
             _ => !self.is_guaranteed_pod(ty),
         }
     }

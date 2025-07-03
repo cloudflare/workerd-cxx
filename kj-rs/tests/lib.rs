@@ -7,6 +7,7 @@
 #![allow(clippy::missing_panics_doc)]
 
 mod test_futures;
+mod test_maybe;
 mod test_own;
 
 use test_futures::{
@@ -37,6 +38,14 @@ mod ffi {
         async fn new_errored_promise_void();
         async fn new_ready_promise_i32(value: i32) -> i32;
         async fn new_ready_promise_shared_type() -> Shared;
+    }
+
+    unsafe extern "C++" {
+        include!("kj-rs-demo/test-maybe.h");
+
+        fn return_maybe() -> Maybe<i64>;
+        fn return_maybe_none() -> Maybe<i64>;
+        fn return_maybe_ref() -> Maybe<*const i64>;
     }
 
     // Helper functions to test `kj_rs::Own`
