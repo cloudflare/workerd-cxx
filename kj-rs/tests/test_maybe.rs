@@ -18,6 +18,12 @@ pub mod tests {
     #[test]
     fn test_none_ref() {
         let maybe = ffi::return_maybe_ref();
+        println!("{}",
+            unsafe { std::mem::transmute_copy::<Maybe<*const i64, kj_rs::repr::Niche>, [u8; 8]>(&maybe) }.into_iter()
+            .map(|c| format!("{c:02x}"))
+            .collect::<String>()
+        );
         assert!(maybe.is_none());
+        assert!(!maybe.is_some());
     }
 }

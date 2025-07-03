@@ -50,6 +50,9 @@ pub mod repr {
 
     impl<T: IsNull> Maybe<T, Niche> {
         pub fn is_some(&self) -> bool {
+            unsafe {
+                return !self.some.assume_init_read().is_null();
+            }
             return !self.is_none();
         }
 

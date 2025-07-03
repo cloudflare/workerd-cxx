@@ -16,7 +16,8 @@ kj::Maybe<int64_t> return_maybe_none() {
 }
 
 kj::Maybe<int64_t const*> return_maybe_ref() {
-    return kj::none;
+    kj::Maybe<int64_t const*> ret = kj::none;
+    return kj::mv(ret);
 }
 
 }  // namespace kj_rs_demo
