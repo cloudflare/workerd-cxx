@@ -1637,7 +1637,6 @@ fn write_kj_own(out: &mut OutFile, key: NamedImplKey) {
     let ident = key.rust;
     let resolve = out.types.resolve(ident);
     let inner = resolve.name.to_fully_qualified();
-    let instance = resolve.name.to_symbol();
 
     out.include.utility = true;
     out.include.kj_rs = true;

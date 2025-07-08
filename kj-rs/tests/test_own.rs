@@ -106,7 +106,7 @@ pub mod tests {
     #[test]
     #[should_panic]
     fn test_null() {
-        let null_own = ffi::null_kj_own();
+        let _null_own = ffi::null_kj_own();
     }
 
     #[test]
