@@ -30,6 +30,7 @@ impl ToTokens for Type {
             | Type::SharedPtr(ty)
             | Type::WeakPtr(ty)
             | Type::CxxVector(ty)
+            | Type::Maybe(ty)
             | Type::RustVec(ty) => ty.to_tokens(tokens),
             Type::Ref(r) | Type::Str(r) => r.to_tokens(tokens),
             Type::Ptr(p) => p.to_tokens(tokens),
@@ -78,6 +79,9 @@ impl ToTokens for Ty1 {
             "Box" => {
                 tokens.extend(quote_spanned!(span=> ::cxx::alloc::boxed::));
             }
+            "Maybe" => {
+                tokens.extend(quote_spanned!(span=> ::kj_rs::repr::));
+            }
             "Vec" => {
                 tokens.extend(quote_spanned!(span=> ::cxx::alloc::vec::));
             }
@@ -86,6 +90,25 @@ impl ToTokens for Ty1 {
         name.to_tokens(tokens);
         langle.to_tokens(tokens);
         inner.to_tokens(tokens);
+        match inner {
+            Type::Ref(_) | Type::Own(_) | Type::Ptr(_) => {
+                tokens.extend(quote_spanned!(span=>, ::kj_rs::maybe::Niche));
+            }
+            Type::Ident(_)
+            | Type::RustBox(_)
+            | Type::RustVec(_)
+            | Type::UniquePtr(_)
+            | Type::SharedPtr(_)
+            | Type::WeakPtr(_)
+            | Type::Str(_)
+            | Type::CxxVector(_)
+            | Type::Fn(_)
+            | Type::Void(_)
+            | Type::Maybe(_)
+            | Type::SliceRef(_)
+            | Type::Array(_)
+            | Type::Future(_) => (),
+        }
         rangle.to_tokens(tokens);
     }
 }

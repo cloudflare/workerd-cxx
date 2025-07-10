@@ -5,6 +5,7 @@ pub use crate::ffi::KjWaker;
 pub use awaiter::PromiseAwaiter;
 pub use future::FuturePollStatus;
 pub use own::repr::Own;
+pub use maybe::repr::Maybe;
 pub use promise::KjPromise;
 pub use promise::KjPromiseNodeImpl;
 pub use promise::OwnPromiseNode;
@@ -13,12 +14,14 @@ pub use promise::new_callbacks_promise_future;
 
 mod awaiter;
 mod future;
+pub mod maybe;
 mod own;
 mod promise;
 mod waker;
 
 pub mod repr {
     pub use crate::future::repr::*;
+    pub use crate::maybe::repr::*;
     pub use crate::own::repr::*;
 }
 
