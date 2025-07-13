@@ -1130,7 +1130,10 @@ fn write_rust_function_shim_impl(
     writeln!(out, ";");
     out.builtin.rust_error = true;
     writeln!(out, "  if (error$.ptr) {{");
-    writeln!(out, "    throw ::rust::impl<::rust::Error>::error(error$);");
+    writeln!(
+        out,
+        "    ::rust::throw_rust_error(static_cast<char const *>(error$.ptr), error$.len);"
+    );
     writeln!(out, "  }}");
 
     if indirect_return {
