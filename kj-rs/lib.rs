@@ -15,11 +15,13 @@ mod awaiter;
 mod future;
 mod own;
 mod promise;
+mod refcount;
 mod waker;
 
 pub mod repr {
     pub use crate::future::repr::*;
     pub use crate::own::repr::*;
+    pub use crate::refcount::repr::*;
 }
 
 pub type Result<T> = std::io::Result<T>;

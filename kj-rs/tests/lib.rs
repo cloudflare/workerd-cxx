@@ -8,6 +8,7 @@
 
 mod test_futures;
 mod test_own;
+mod test_refcount;
 
 use test_futures::{
     new_awaiting_future_i32, new_error_handling_future_void_infallible, new_errored_future_void,
@@ -72,6 +73,29 @@ mod ffi {
         fn rust_take_own_driver();
     }
 
+    unsafe extern "C++" {
+        include!("kj-rs-demo/test-refcount.h");
+
+        type OpaqueRefcountedClass;
+
+        #[allow(dead_code)]
+        fn get_rc() -> KjRc<OpaqueRefcountedClass>;
+        #[allow(dead_code)]
+        #[cxx_name = "getData"]
+        fn get_data(&self) -> u64;
+    }
+
+    unsafe extern "C++" {
+        include!("kj-rs-demo/test-refcount.h");
+
+        type OpaqueAtomicRefcountedClass;
+
+        #[allow(dead_code)]
+        fn get_arc() -> KjArc<OpaqueAtomicRefcountedClass>;
+        #[allow(dead_code)]
+        #[cxx_name = "getData"]
+        fn get_data(&self) -> u64;
+    }
     // Helper function to test moving `Own` to C++
     extern "Rust" {
         fn modify_own_return(cpp_own: Own<OpaqueCxxClass>) -> Own<OpaqueCxxClass>;

@@ -1058,6 +1058,8 @@ fn parse_impl(cx: &mut Errors, imp: ItemImpl) -> Result<Api> {
         | Type::RustVec(ty)
         | Type::UniquePtr(ty)
         | Type::Own(ty)
+        | Type::KjRc(ty)
+        | Type::KjArc(ty)
         | Type::SharedPtr(ty)
         | Type::WeakPtr(ty)
         | Type::CxxVector(ty) => match &ty.inner {
@@ -1230,6 +1232,26 @@ fn parse_type_path(ty: &TypePath) -> Result<Type> {
                     if let GenericArgument::Type(arg) = &generic.args[0] {
                         let inner = parse_type(arg)?;
                         return Ok(Type::Own(Box::new(Ty1 {
+                            name: ident,
+                            langle: generic.lt_token,
+                            inner,
+                            rangle: generic.gt_token,
+                        })));
+                    }
+                } else if ident == "KjRc" && generic.args.len() == 1 {
+                    if let GenericArgument::Type(arg) = &generic.args[0] {
+                        let inner = parse_type(arg)?;
+                        return Ok(Type::KjRc(Box::new(Ty1 {
+                            name: ident,
+                            langle: generic.lt_token,
+                            inner,
+                            rangle: generic.gt_token,
+                        })));
+                    }
+                } else if ident == "KjArc" && generic.args.len() == 1 {
+                    if let GenericArgument::Type(arg) = &generic.args[0] {
+                        let inner = parse_type(arg)?;
+                        return Ok(Type::KjArc(Box::new(Ty1 {
                             name: ident,
                             langle: generic.lt_token,
                             inner,
@@ -1487,6 +1509,8 @@ fn has_references_without_lifetime(ty: &Type) -> bool {
         | Type::RustVec(t)
         | Type::UniquePtr(t)
         | Type::Own(t)
+        | Type::KjRc(t)
+        | Type::KjArc(t)
         | Type::SharedPtr(t)
         | Type::WeakPtr(t)
         | Type::CxxVector(t) => has_references_without_lifetime(&t.inner),
