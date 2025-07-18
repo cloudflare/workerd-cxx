@@ -9,6 +9,8 @@ pub enum ImplKey<'a> {
     RustVec(NamedImplKey<'a>),
     UniquePtr(NamedImplKey<'a>),
     Own(NamedImplKey<'a>),
+    KjRc(NamedImplKey<'a>),
+    KjArc(NamedImplKey<'a>),
     SharedPtr(NamedImplKey<'a>),
     WeakPtr(NamedImplKey<'a>),
     CxxVector(NamedImplKey<'a>),
@@ -44,6 +46,14 @@ impl Type {
         } else if let Type::Own(ty) = self {
             if let Type::Ident(ident) = &ty.inner {
                 return Some(ImplKey::Own(NamedImplKey::new(ty, ident)));
+            }
+        } else if let Type::KjRc(ty) = self {
+            if let Type::Ident(ident) = &ty.inner {
+                return Some(ImplKey::KjRc(NamedImplKey::new(ty, ident)));
+            }
+        } else if let Type::KjArc(ty) = self {
+            if let Type::Ident(ident) = &ty.inner {
+                return Some(ImplKey::KjArc(NamedImplKey::new(ty, ident)));
             }
         } else if let Type::SharedPtr(ty) = self {
             if let Type::Ident(ident) = &ty.inner {
