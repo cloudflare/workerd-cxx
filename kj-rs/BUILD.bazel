@@ -1,5 +1,5 @@
 load("//tools/bazel:rust_cxx_bridge.bzl", "rust_cxx_bridge")
-load("@rules_rust//rust:defs.bzl", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
 
 cc_library(
     name = "kj-rs-lib",
@@ -25,8 +25,15 @@ rust_library(
         ":bridge",
         ":kj-rs-lib",
         "@workerd-cxx//:cxx",
+        "@crates.io//:futures",
         "@crates.io//:static_assertions",
     ],
+)
+
+rust_test(
+    name = "kj-rs_test",
+    crate = ":kj-rs",
+    edition = "2024",
 )
 
 rust_cxx_bridge(

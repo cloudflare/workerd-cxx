@@ -1,6 +1,7 @@
 // TODO(now): Make this a library, drive test from Rust.
 // TODO(now): Move as many cases as possible into kj-rs.
 
+#include "kj-rs-demo/lib.rs.h"
 #include "kj-rs-demo/test-promises.h"
 #include "kj-rs/awaiter.h"
 #include "kj-rs/future.h"
