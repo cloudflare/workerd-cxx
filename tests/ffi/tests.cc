@@ -839,7 +839,7 @@ extern "C" const char *cxx_run_test() noexcept {
     r_std_result_kj_exception_fail_return_primitive();
     KJ_ASSERT(false);
   } catch (const kj::Exception &e) {
-    KJ_ASSERT(e.getDescription() == "<<<KjException>>>"_kj);
+    KJ_ASSERT(e.getDescription() == "test kj exception"_kj);
     KJ_ASSERT(e.getFile() == "tests/ffi/lib.rs"_kj);
   }
 
@@ -848,7 +848,7 @@ extern "C" const char *cxx_run_test() noexcept {
     r_result_kj_exception_fail_return_primitive();
     KJ_ASSERT(false);
   } catch (const kj::Exception &e) {
-    KJ_ASSERT(e.getDescription() == "<<<KjException>>>"_kj);
+    KJ_ASSERT(e.getDescription() == "test kj exception"_kj);
     KJ_ASSERT(e.getFile() == "tests/ffi/lib.rs"_kj);
   }
 

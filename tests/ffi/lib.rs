@@ -18,7 +18,6 @@ pub mod cast;
 pub mod module;
 
 use cxx::{type_id, CxxString, CxxVector, ExternType, SharedPtr, UniquePtr};
-use std::fmt::{self, Display};
 use std::mem::MaybeUninit;
 use std::os::raw::c_char;
 
@@ -450,11 +449,9 @@ unsafe impl ExternType for Buffer {
 #[derive(Debug)]
 struct Error;
 
-impl std::error::Error for Error {}
-
-impl Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str("rust error")
+impl cxx::ToKjException for Error {
+    fn to_kj_exception(self) -> cxx::KjException {
+        cxx::KjException::new("rust error".to_owned())
     }
 }
 
@@ -675,7 +672,7 @@ fn r_std_result_kj_exception_return_primitive() -> Result<usize, cxx::KjExceptio
 }
 
 fn r_std_result_kj_exception_fail_return_primitive() -> Result<usize, cxx::KjException> {
-    Err(cxx::KjException{})
+    Err(cxx::KjException::new("test kj exception".to_owned()))
 }
 
 fn r_result_kj_exception_return_primitive() -> Result<usize, cxx::KjException> {
@@ -683,7 +680,7 @@ fn r_result_kj_exception_return_primitive() -> Result<usize, cxx::KjException> {
 }
 
 fn r_result_kj_exception_fail_return_primitive() -> Result<usize, cxx::KjException> {
-    Err(cxx::KjException{})
+    Err(cxx::KjException::new("test kj exception".to_owned()))
 }
 
 fn r_try_return_sliceu8(slice: &[u8]) -> Result<&[u8], Error> {

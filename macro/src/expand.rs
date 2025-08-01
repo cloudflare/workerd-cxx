@@ -1266,16 +1266,7 @@ fn expand_rust_function_shim_super(
             Some(ret) => quote!(#ret),
             None => quote!(()),
         };
-        // Set spans that result in the `Result<...>` written by the user being
-        // highlighted as the cause if their error type has no Display impl.
-        let result_begin = quote_spanned!(result.span=> ::cxx::core::result::Result<#ok, impl);
-        let result_end = if rustversion::cfg!(since(1.82)) {
-            // https://blog.rust-lang.org/2024/10/17/Rust-1.82.0.html#precise-capturing-use-syntax
-            quote_spanned!(rangle.span=> ::cxx::core::fmt::Display + use<>>)
-        } else {
-            quote_spanned!(rangle.span=> ::cxx::core::fmt::Display>)
-        };
-        quote!(-> #result_begin #result_end)
+        quote!(-> ::cxx::core::result::Result<#ok, impl ::cxx::ToKjException + use<>>)
     } else if let Some(Type::Future(fut)) = &sig.ret {
         let output = &fut.output;
         let lifetimes: Vec<_> = sig.generics.lifetimes().map(|lt| quote!(#lt)).collect();
