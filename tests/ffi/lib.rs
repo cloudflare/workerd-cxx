@@ -308,6 +308,11 @@ pub mod ffi {
         fn r_try_return_primitive() -> Result<usize>;
         fn r_try_return_box() -> Result<Box<R>>;
         fn r_fail_return_primitive() -> Result<usize>;
+
+        fn r_std_io_result_return_primitive() -> std::io::Result<usize, Error>;
+        fn r_std_io_result_fail_return_primitive() -> std::io::Result<usize, Error>;
+
+
         unsafe fn r_try_return_sliceu8<'a>(s: &'a [u8]) -> Result<&'a [u8]>;
         unsafe fn r_try_return_mutsliceu8<'a>(s: &'a mut [u8]) -> Result<&'a mut [u8]>;
 
@@ -649,6 +654,14 @@ fn r_try_return_box() -> Result<Box<R>, Error> {
 
 fn r_fail_return_primitive() -> Result<usize, Error> {
     Err(Error)
+}
+
+fn r_std_io_result_return_primitive() -> Result<usize, std::io::Error> {
+    Ok(2020)
+}
+
+fn r_std_io_result_fail_return_primitive() -> Result<usize, std::io::Error> {
+    Err(std::io::Error::new(std::io::ErrorKind::Other, "test error"))
 }
 
 fn r_try_return_sliceu8(slice: &[u8]) -> Result<&[u8], Error> {
