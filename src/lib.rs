@@ -466,6 +466,7 @@ pub use crate::cxx_vector::CxxVector;
 #[cfg(feature = "alloc")]
 #[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
 pub use crate::exception::Exception;
+pub use crate::result::KjException;
 pub use crate::extern_type::{kind, ExternType};
 pub use crate::shared_ptr::SharedPtr;
 pub use crate::string::CxxString;

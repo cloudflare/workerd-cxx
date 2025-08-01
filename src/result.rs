@@ -4,6 +4,7 @@
 use crate::exception::repr;
 use crate::exception::Exception;
 use alloc::string::ToString;
+use core::fmt;
 use core::fmt::Display;
 use core::ptr::{self, NonNull};
 use core::result::Result as StdResult;
@@ -61,5 +62,16 @@ impl Result {
 impl Drop for Result {
     fn drop(&mut self) {
         unsafe { repr::drop_in_place(self.err) }
+    }
+}
+
+pub struct KjException {
+
+}
+
+
+impl Display for KjException {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.write_str("<<<KjException>>>")
     }
 }

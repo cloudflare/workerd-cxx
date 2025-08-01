@@ -309,8 +309,14 @@ pub mod ffi {
         fn r_try_return_box() -> Result<Box<R>>;
         fn r_fail_return_primitive() -> Result<usize>;
 
-        fn r_std_io_result_return_primitive() -> std::io::Result<usize, Error>;
-        fn r_std_io_result_fail_return_primitive() -> std::io::Result<usize, Error>;
+        fn r_std_result_io_error_return_primitive() -> std::result::Result<usize, Error>;
+        fn r_std_result_io_error_fail_return_primitive() -> std::result::Result<usize, Error>;
+
+        fn r_std_result_kj_exception_return_primitive() -> std::result::Result<usize, Error>;
+        fn r_std_result_kj_exception_fail_return_primitive() -> std::result::Result<usize, Error>;
+
+        fn r_result_kj_exception_return_primitive() -> Result<usize>;
+        fn r_result_kj_exception_fail_return_primitive() -> Result<usize>;
 
 
         unsafe fn r_try_return_sliceu8<'a>(s: &'a [u8]) -> Result<&'a [u8]>;
@@ -656,12 +662,28 @@ fn r_fail_return_primitive() -> Result<usize, Error> {
     Err(Error)
 }
 
-fn r_std_io_result_return_primitive() -> Result<usize, std::io::Error> {
+fn r_std_result_io_error_return_primitive() -> Result<usize, std::io::Error> {
     Ok(2020)
 }
 
-fn r_std_io_result_fail_return_primitive() -> Result<usize, std::io::Error> {
+fn r_std_result_io_error_fail_return_primitive() -> Result<usize, std::io::Error> {
     Err(std::io::Error::new(std::io::ErrorKind::Other, "test error"))
+}
+
+fn r_std_result_kj_exception_return_primitive() -> Result<usize, cxx::KjException> {
+    Ok(2020)
+}
+
+fn r_std_result_kj_exception_fail_return_primitive() -> Result<usize, cxx::KjException> {
+    Err(cxx::KjException{})
+}
+
+fn r_result_kj_exception_return_primitive() -> Result<usize, cxx::KjException> {
+    Ok(2020)
+}
+
+fn r_result_kj_exception_fail_return_primitive() -> Result<usize, cxx::KjException> {
+    Err(cxx::KjException{})
 }
 
 fn r_try_return_sliceu8(slice: &[u8]) -> Result<&[u8], Error> {

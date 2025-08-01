@@ -1512,7 +1512,7 @@ fn parse_return_type(
                 if let Some(segment) = iter.next() {
                     if segment.ident == "std" {
                         if let Some(segment) = iter.next() {
-                            if segment.ident == "io" {
+                            if segment.ident == "result" {
                                 if let Some(segment) = iter.next() {
                                     if segment.ident == "Result" {
                                         if let PathArguments::AngleBracketed(generic) =
