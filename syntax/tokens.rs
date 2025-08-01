@@ -1,7 +1,7 @@
 use crate::atom::Atom::*;
 use crate::{
     Array, Atom, Derive, Enum, EnumRepr, ExternFn, ExternType, Future, Impl, Lifetimes, NamedType,
-    Ptr, Ref, Signature, SliceRef, Struct, Ty1, Type, TypeAlias, Var,
+    Ptr, Ref, Signature, SliceRef, Struct, Ty1, TyVar, Type, TypeAlias, Var,
 };
 use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote_spanned, ToTokens};
@@ -24,6 +24,7 @@ impl ToTokens for Type {
                 }
                 ident.to_tokens(tokens);
             }
+            Type::OneOf(ty) => ty.to_tokens(tokens),
             Type::RustBox(ty)
             | Type::UniquePtr(ty)
             | Type::Own(ty)
@@ -59,6 +60,26 @@ impl ToTokens for Var {
         name.rust.to_tokens(tokens);
         Token![:](name.rust.span()).to_tokens(tokens);
         ty.to_tokens(tokens);
+    }
+}
+
+impl ToTokens for TyVar {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let TyVar {
+            name,
+            langle,
+            inner,
+            rangle,
+        } = self;
+        let span = name.span();
+        match name.to_string().as_str() {
+            "OneOf" => tokens.extend(quote_spanned!(span => ::kj_rs::repr::)),
+            _ => {}
+        }
+        name.to_tokens(tokens);
+        langle.to_tokens(tokens);
+        inner.to_tokens(tokens);
+        rangle.to_tokens(tokens);
     }
 }
 

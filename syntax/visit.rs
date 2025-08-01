@@ -12,6 +12,11 @@ where
 {
     match ty {
         Type::Ident(_) | Type::Str(_) | Type::Void(_) => {}
+        Type::OneOf(ty) => {
+            for ty in ty.inner.iter() {
+                visitor.visit_type(ty);
+            }
+        }
         Type::RustBox(ty)
         | Type::UniquePtr(ty)
         | Type::Own(ty)

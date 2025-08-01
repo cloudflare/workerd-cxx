@@ -3,6 +3,7 @@ use crate::nested::NamespaceEntries;
 use crate::out::OutFile;
 use crate::{builtin, include, Opt};
 use proc_macro2::Ident;
+use syn::{punctuated::Punctuated, Token};
 use syntax::atom::Atom::{self, *};
 use syntax::instantiate::{ImplKey, NamedImplKey};
 use syntax::map::UnorderedMap as Map;
@@ -233,7 +234,12 @@ fn pick_includes_and_builtins(out: &mut OutFile, apis: &[Api]) {
             Type::SliceRef(_) => out.builtin.rust_slice = true,
             Type::Array(_) => out.include.array = true,
             Type::Ref(_) | Type::Void(_) | Type::Ptr(_) => {}
-            Type::Future(_) | Type::Maybe(_) | Type::Own(_) | Type::KjRc(_) | Type::KjArc(_) => {
+            Type::Future(_)
+            | Type::Maybe(_)
+            | Type::Own(_)
+            | Type::KjRc(_)
+            | Type::KjArc(_)
+            | Type::OneOf(_) => {
                 out.include.kj_rs = true;
             }
         }
@@ -1225,6 +1231,16 @@ fn write_extern_arg(out: &mut OutFile, arg: &Var) {
     write!(out, "{}", arg.name.cxx);
 }
 
+fn write_types(out: &mut OutFile, ty: &Punctuated<Type, Token![,]>) {
+    let last = ty.len() - 1;
+    for (i, ty) in ty.iter().enumerate() {
+        write_type(out, ty);
+        if i != last {
+            write!(out, ", ");
+        }
+    }
+}
+
 fn write_type(out: &mut OutFile, ty: &Type) {
     match ty {
         Type::Ident(ident) => match Atom::from(&ident.rust) {
@@ -1283,6 +1299,11 @@ fn write_type(out: &mut OutFile, ty: &Type) {
         Type::CxxVector(ty) => {
             write!(out, "::std::vector<");
             write_type(out, &ty.inner);
+            write!(out, ">");
+        }
+        Type::OneOf(ty) => {
+            write!(out, "::kj::OneOf<");
+            write_types(out, &ty.inner);
             write!(out, ">");
         }
         Type::Ref(r) => {
@@ -1382,6 +1403,7 @@ fn write_space_after_type(out: &mut OutFile, ty: &Type) {
         | Type::SliceRef(_)
         | Type::Fn(_)
         | Type::Array(_) => write!(out, " "),
+        Type::OneOf(_) => write!(out, " "),
         Type::Ref(_) | Type::Ptr(_) => {}
         Type::Void(_) => unreachable!(),
         Type::Future(_) => write!(out, " "),

@@ -49,6 +49,7 @@ rust_cxx_bridge(
         "test-maybe.h",
         "test-own.h",
         "shared.h",
+        "test-oneof.h",
         "test-refcount.h"
     ],
     include_prefix = "kj-rs-demo",
@@ -62,7 +63,8 @@ cc_library(
     srcs = [
         "test-promises.c++",
         "test-own.c++",
-        "test-refcount.c++"
+        "test-refcount.c++",
+        "test-oneof.c++"
     ],
     linkstatic = select({
         "@platforms//os:windows": True,

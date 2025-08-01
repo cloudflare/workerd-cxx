@@ -32,6 +32,10 @@ impl<'a> Types<'a> {
             | Type::WeakPtr(_)
             | Type::CxxVector(_)
             | Type::Void(_) => false,
+            Type::OneOf(ty) => {
+                // Probably needs changing at some point
+                ty.inner.iter().all(|ty| self.is_guaranteed_pod(ty))
+            }
             Type::Ref(_) | Type::Str(_) | Type::Fn(_) | Type::SliceRef(_) | Type::Ptr(_) => true,
             Type::Maybe(ty) => self.is_guaranteed_pod(&ty.inner),
             Type::Array(array) => self.is_guaranteed_pod(&array.inner),

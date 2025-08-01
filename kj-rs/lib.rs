@@ -16,6 +16,7 @@ pub use repr::{KjArc, KjRc};
 mod awaiter;
 mod future;
 pub mod maybe;
+mod oneof;
 mod own;
 mod promise;
 pub mod refcount;
@@ -24,6 +25,7 @@ mod waker;
 pub mod repr {
     pub use crate::future::repr::*;
     pub use crate::maybe::repr::*;
+    pub use crate::oneof::repr::*;
     pub use crate::own::repr::*;
     pub use crate::refcount::repr::*;
 }

@@ -3,7 +3,7 @@ use crate::report::Errors;
 use crate::visit::{self, Visit};
 use crate::{
     error, ident, trivial, Api, Array, Enum, ExternFn, ExternType, Future, Impl, Lang, Lifetimes,
-    NamedType, Ptr, Receiver, Ref, RustType, Signature, SliceRef, Struct, Trait, Ty1, Type,
+    NamedType, Ptr, Receiver, Ref, RustType, Signature, SliceRef, Struct, Trait, Ty1, TyVar, Type,
     TypeAlias, Types,
 };
 use proc_macro2::{Delimiter, Group, Ident, TokenStream};
@@ -75,6 +75,7 @@ fn check_type(cx: &mut Check, ty: &Type) {
         Type::Own(ptr) => check_type_kj_own(cx, ptr),
         Type::KjRc(ptr) => check_type_kj_rc(cx, ptr),
         Type::KjArc(ptr) => check_type_kj_arc(cx, ptr),
+        Type::OneOf(tys) => check_type_oneof(cx, tys),
         Type::SharedPtr(ptr) => check_type_shared_ptr(cx, ptr),
         Type::WeakPtr(ptr) => check_type_weak_ptr(cx, ptr),
         Type::CxxVector(ptr) => check_type_cxx_vector(cx, ptr),
@@ -189,6 +190,7 @@ fn check_type_kj_own(cx: &mut Check, ptr: &Ty1) {
 
     cx.error(ptr, "unsupported kj::Own target type");
 }
+
 fn check_type_kj_rc(cx: &mut Check, ptr: &Ty1) {
     if let Type::Ident(ident) = &ptr.inner {
         if cx.types.rust.contains(&ident.rust) {
@@ -206,6 +208,8 @@ fn check_type_kj_rc(cx: &mut Check, ptr: &Ty1) {
 
     cx.error(ptr, "unsupported KjRc target type");
 }
+
+fn check_type_oneof(cx: &mut Check, ptr: &TyVar) {}
 
 fn check_type_kj_arc(cx: &mut Check, ptr: &Ty1) {
     if let Type::Ident(ident) = &ptr.inner {
@@ -795,6 +799,7 @@ fn is_unsized(cx: &mut Check, ty: &Type) -> bool {
         | Type::Ptr(_)
         | Type::Str(_)
         | Type::SliceRef(_) => false,
+        Type::OneOf(_) => false,
         Type::Future(_) => false,
     }
 }
@@ -870,6 +875,7 @@ fn describe(cx: &mut Check, ty: &Type) -> String {
         Type::SharedPtr(_) => "shared_ptr".to_owned(),
         Type::WeakPtr(_) => "weak_ptr".to_owned(),
         Type::Maybe(_) => "kj::Maybe".to_owned(),
+        Type::OneOf(_) => "kj::OneOf".to_owned(),
         Type::Ref(_) => "reference".to_owned(),
         Type::Ptr(_) => "raw pointer".to_owned(),
         Type::Str(_) => "&str".to_owned(),

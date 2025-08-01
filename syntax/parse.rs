@@ -3,12 +3,12 @@ use crate::cfg::CfgExpr;
 use crate::discriminant::DiscriminantSet;
 use crate::file::{Item, ItemForeignMod};
 use crate::report::Errors;
-use crate::Atom::*;
 use crate::{
     attrs, error, Api, Array, Derive, Doc, Enum, EnumRepr, ExternFn, ExternType, ForeignName,
     Future, Impl, Include, IncludeKind, Lang, Lifetimes, NamedType, Namespace, Pair, Ptr, Receiver,
     Ref, Signature, SliceRef, Struct, Ty1, Type, TypeAlias, Var, Variant,
 };
+use crate::{Atom::*, TyVar};
 use proc_macro2::{Delimiter, Group, Span, TokenStream, TokenTree};
 use quote::{format_ident, quote, quote_spanned};
 use std::mem;
@@ -1067,6 +1067,9 @@ fn parse_impl(cx: &mut Errors, imp: ItemImpl) -> Result<Api> {
             Type::Ident(ident) => ident.generics.clone(),
             _ => Lifetimes::default(),
         },
+        Type::OneOf(_tys) => {
+            todo!()
+        }
         Type::Ident(_)
         | Type::Ref(_)
         | Type::Ptr(_)
@@ -1259,6 +1262,30 @@ fn parse_type_path(ty: &TypePath) -> Result<Type> {
                             rangle: generic.gt_token,
                         })));
                     }
+                } else if ident == "OneOf" {
+                    let types = generic
+                        .args
+                        .iter()
+                        .map(|args| {
+                            if let GenericArgument::Type(arg) = args {
+                                Ok(parse_type(arg)?)
+                            } else {
+                                Err(Error::new_spanned(
+                                    args,
+                                    "only type generics are allowed in OneOf",
+                                ))
+                            }
+                        })
+                        .collect::<Result<Vec<Type>>>()?;
+
+                    let inner: Punctuated<Type, Token![,]> = Punctuated::from_iter(types);
+
+                    return Ok(Type::OneOf(Box::new(TyVar {
+                        name: ident,
+                        langle: generic.lt_token,
+                        inner,
+                        rangle: generic.gt_token,
+                    })));
                 } else if ident == "SharedPtr" && generic.args.len() == 1 {
                     if let GenericArgument::Type(arg) = &generic.args[0] {
                         let inner = parse_type(arg)?;
@@ -1526,6 +1553,7 @@ fn has_references_without_lifetime(ty: &Type) -> bool {
         | Type::WeakPtr(t)
         | Type::Maybe(t)
         | Type::CxxVector(t) => has_references_without_lifetime(&t.inner),
+        Type::OneOf(tys) => tys.inner.iter().all(has_references_without_lifetime),
         Type::Ptr(t) => has_references_without_lifetime(&t.inner),
         Type::Array(t) => has_references_without_lifetime(&t.inner),
         Type::SliceRef(t) => t.lifetime.is_none(),

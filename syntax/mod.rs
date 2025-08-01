@@ -295,6 +295,7 @@ pub enum Type {
     Own(Box<Ty1>),
     KjRc(Box<Ty1>),
     KjArc(Box<Ty1>),
+    OneOf(Box<TyVar>),
     SharedPtr(Box<Ty1>),
     WeakPtr(Box<Ty1>),
     Ref(Box<Ref>),
@@ -313,6 +314,13 @@ pub struct Ty1 {
     pub name: Ident,
     pub langle: Token![<],
     pub inner: Type,
+    pub rangle: Token![>],
+}
+
+pub struct TyVar {
+    pub name: Ident,
+    pub langle: Token![<],
+    pub inner: Punctuated<Type, Token![,]>,
     pub rangle: Token![>],
 }
 

@@ -1,6 +1,6 @@
 use crate::{
     Array, ExternFn, Future, Include, Lifetimes, Ptr, Receiver, Ref, Signature, SliceRef, Ty1,
-    Type, Var,
+    TyVar, Type, Var,
 };
 use std::hash::{Hash, Hasher};
 use std::mem;
@@ -50,6 +50,7 @@ impl Hash for Type {
             Type::Own(t) => t.hash(state),
             Type::KjRc(t) => t.hash(state),
             Type::KjArc(t) => t.hash(state),
+            Type::OneOf(t) => t.hash(state),
             Type::SharedPtr(t) => t.hash(state),
             Type::WeakPtr(t) => t.hash(state),
             Type::Ref(t) => t.hash(state),
@@ -153,6 +154,21 @@ impl Hash for Ty1 {
         } = self;
         name.hash(state);
         inner.hash(state);
+    }
+}
+
+impl Hash for TyVar {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        let TyVar {
+            name,
+            langle,
+            inner,
+            rangle,
+        } = self;
+        name.hash(state);
+        for ty in inner.iter() {
+            ty.hash(state);
+        }
     }
 }
 

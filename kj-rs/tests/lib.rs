@@ -12,6 +12,7 @@
 
 mod test_futures;
 mod test_maybe;
+mod test_oneof;
 mod test_own;
 mod test_refcount;
 
@@ -38,6 +39,11 @@ type Error = std::io::Error;
 mod ffi {
     struct Shared {
         i: i64,
+    }
+
+    unsafe extern "C++" {
+        include!("kj-rs-demo/test-oneof.h");
+        fn new_oneof() -> OneOf<u32, usize>;
     }
 
     unsafe extern "C++" {

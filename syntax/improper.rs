@@ -22,6 +22,10 @@ impl<'a> Types<'a> {
                     Definite(self.rust.contains(ident) || self.aliases.contains_key(ident))
                 }
             }
+            Type::OneOf(tys) => {
+                let ty = tys.inner.iter().map(|ty| self.determine_improper_ctype(ty));
+                todo!()
+            }
             Type::RustBox(_)
             | Type::RustVec(_)
             | Type::Str(_)
