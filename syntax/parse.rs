@@ -1147,7 +1147,7 @@ fn parse_type(ty: &RustType) -> Result<Type> {
         RustType::Array(ty) => parse_type_array(ty),
         RustType::BareFn(ty) => parse_type_fn(ty),
         RustType::Tuple(ty) if ty.elems.is_empty() => Ok(Type::Void(ty.paren_token.span.join())),
-        _ => Err(Error::new_spanned(ty, "unsupported type")),
+        _ => Err(Error::new_spanned(ty, "unsupported type (parse_type)")),
     }
 }
 
@@ -1177,7 +1177,10 @@ fn parse_type_reference(ty: &TypeReference) -> Result<Type> {
     Ok(match &inner {
         Type::Ident(ident) if ident.rust == "str" => {
             if ty.mutability.is_some() {
-                return Err(Error::new_spanned(ty, "unsupported type"));
+                return Err(Error::new_spanned(
+                    ty,
+                    "unsupported type (parse_type_reference)",
+                ));
             } else {
                 Type::Str
             }
@@ -1213,8 +1216,9 @@ fn parse_type_ptr(ty: &TypePtr) -> Result<Type> {
 
 fn parse_type_path(ty: &TypePath) -> Result<Type> {
     let path = &ty.path;
-    if ty.qself.is_none() && path.leading_colon.is_none() && path.segments.len() == 1 {
-        let segment = &path.segments[0];
+    let segments = &path.segments;
+    if ty.qself.is_none() && path.leading_colon.is_none() && segments.len() == 1 {
+        let segment = &segments[0];
         let ident = segment.ident.clone();
         match &segment.arguments {
             PathArguments::None => return Ok(Type::Ident(NamedType::new(ident))),
@@ -1361,14 +1365,14 @@ fn parse_type_path(ty: &TypePath) -> Result<Type> {
         }
     }
 
-    if ty.qself.is_none() && path.segments.len() == 2 && path.segments[0].ident == "cxx" {
+    if ty.qself.is_none() && segments.len() == 2 && segments[0].ident == "cxx" {
         return Err(Error::new_spanned(
             ty,
             "unexpected `cxx::` qualifier found in a `#[cxx::bridge]`",
         ));
     }
 
-    Err(Error::new_spanned(ty, "unsupported type"))
+    Err(Error::new_spanned(ty, "unsupported type (parse_type_path)"))
 }
 
 fn parse_type_array(ty: &TypeArray) -> Result<Type> {
@@ -1485,15 +1489,51 @@ fn parse_return_type(
 
     if let RustType::Path(ty) = ret {
         let path = &ty.path;
-        if ty.qself.is_none() && path.leading_colon.is_none() && path.segments.len() == 1 {
-            let segment = &path.segments[0];
-            let ident = segment.ident.clone();
-            if let PathArguments::AngleBracketed(generic) = &segment.arguments {
-                if ident == "Result" && generic.args.len() == 1 {
-                    if let GenericArgument::Type(arg) = &generic.args[0] {
-                        ret = arg;
-                        *throws_tokens =
-                            Some((kw::Result(ident.span()), generic.lt_token, generic.gt_token));
+        let segments = &path.segments;
+        if ty.qself.is_none() && path.leading_colon.is_none() {
+            if segments.len() == 1 {
+                let segment = &segments[0];
+                if let PathArguments::AngleBracketed(generic) = &segment.arguments {
+                    if segment.ident == "Result" {
+                        if generic.args.len() == 1 {
+                            if let GenericArgument::Type(arg) = &generic.args[0] {
+                                ret = arg;
+                                *throws_tokens = Some((
+                                    kw::Result(segment.ident.span()),
+                                    generic.lt_token,
+                                    generic.gt_token,
+                                ));
+                            }
+                        }
+                    }
+                }
+            } else if segments.len() > 1 {
+                let mut iter = segments.iter();
+                if let Some(segment) = iter.next() {
+                    if segment.ident == "std" {
+                        if let Some(segment) = iter.next() {
+                            if segment.ident == "result" {
+                                if let Some(segment) = iter.next() {
+                                    if segment.ident == "Result" {
+                                        if let PathArguments::AngleBracketed(generic) =
+                                            &segment.arguments
+                                        {
+                                            if generic.args.len() == 2 {
+                                                if let GenericArgument::Type(arg) = &generic.args[0]
+                                                {
+                                                    ret = arg;
+                                                    *throws_tokens = Some((
+                                                        kw::Result(segment.ident.span()),
+                                                        generic.lt_token,
+                                                        generic.gt_token,
+                                                    ));
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

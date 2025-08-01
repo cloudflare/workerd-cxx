@@ -18,7 +18,6 @@ pub mod cast;
 pub mod module;
 
 use cxx::{type_id, CxxString, CxxVector, ExternType, SharedPtr, UniquePtr};
-use std::fmt::{self, Display};
 use std::mem::MaybeUninit;
 use std::os::raw::c_char;
 
@@ -308,6 +307,17 @@ pub mod ffi {
         fn r_try_return_primitive() -> Result<usize>;
         fn r_try_return_box() -> Result<Box<R>>;
         fn r_fail_return_primitive() -> Result<usize>;
+
+        fn r_std_result_io_error_return_primitive() -> std::result::Result<usize, Error>;
+        fn r_std_result_io_error_fail_return_primitive() -> std::result::Result<usize, Error>;
+
+        fn r_std_result_kj_exception_return_primitive() -> std::result::Result<usize, Error>;
+        fn r_std_result_kj_exception_fail_return_primitive() -> std::result::Result<usize, Error>;
+
+        fn r_result_kj_exception_return_primitive() -> Result<usize>;
+        fn r_result_kj_exception_fail_return_primitive() -> Result<usize>;
+
+
         unsafe fn r_try_return_sliceu8<'a>(s: &'a [u8]) -> Result<&'a [u8]>;
         unsafe fn r_try_return_mutsliceu8<'a>(s: &'a mut [u8]) -> Result<&'a mut [u8]>;
 
@@ -439,11 +449,9 @@ unsafe impl ExternType for Buffer {
 #[derive(Debug)]
 struct Error;
 
-impl std::error::Error for Error {}
-
-impl Display for Error {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        f.write_str("rust error")
+impl cxx::ToKjException for Error {
+    fn to_kj_exception(self) -> cxx::KjException {
+        cxx::KjException::new("rust error".to_owned())
     }
 }
 
@@ -649,6 +657,30 @@ fn r_try_return_box() -> Result<Box<R>, Error> {
 
 fn r_fail_return_primitive() -> Result<usize, Error> {
     Err(Error)
+}
+
+fn r_std_result_io_error_return_primitive() -> Result<usize, std::io::Error> {
+    Ok(2020)
+}
+
+fn r_std_result_io_error_fail_return_primitive() -> Result<usize, std::io::Error> {
+    Err(std::io::Error::new(std::io::ErrorKind::Other, "test error"))
+}
+
+fn r_std_result_kj_exception_return_primitive() -> Result<usize, cxx::KjException> {
+    Ok(2020)
+}
+
+fn r_std_result_kj_exception_fail_return_primitive() -> Result<usize, cxx::KjException> {
+    Err(cxx::KjException::new("test kj exception".to_owned()))
+}
+
+fn r_result_kj_exception_return_primitive() -> Result<usize, cxx::KjException> {
+    Ok(2020)
+}
+
+fn r_result_kj_exception_fail_return_primitive() -> Result<usize, cxx::KjException> {
+    Err(cxx::KjException::new("test kj exception".to_owned()))
 }
 
 fn r_try_return_sliceu8(slice: &[u8]) -> Result<&[u8], Error> {

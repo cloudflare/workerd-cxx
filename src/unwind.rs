@@ -71,10 +71,10 @@ fn panic_result(
 ) -> ::cxx::private::Result {
     if let Some(err) = err.downcast_ref::<alloc::string::String>() {
         return ::cxx::private::Result::error(
-            &std::format!("panic in {label}: {err}"),
+            std::format!("panic in {label}: {err}"),
             file!(),
             line!(),
         );
     }
-    ::cxx::private::Result::error(&std::format!("panic in {label}"), file!(), line!())
+    ::cxx::private::Result::error(std::format!("panic in {label}"), file!(), line!())
 }

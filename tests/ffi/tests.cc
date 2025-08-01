@@ -817,12 +817,38 @@ extern "C" const char *cxx_run_test() noexcept {
   r_take_ref_empty_vector(empty_vector);
   r_take_enum(Enum::AVal);
 
-  ASSERT(r_try_return_primitive() == 2020);
+  KJ_ASSERT(r_try_return_primitive() == 2020);
   try {
     r_fail_return_primitive();
-    ASSERT(false);
+    KJ_ASSERT(false);
   } catch (const kj::Exception &e) {
     KJ_ASSERT(e.getDescription() == "rust error"_kj);
+    KJ_ASSERT(e.getFile() == "tests/ffi/lib.rs"_kj);
+  }
+  KJ_ASSERT(r_std_result_io_error_return_primitive() == 2020);
+  try {
+    r_std_result_io_error_fail_return_primitive();
+    KJ_ASSERT(false);
+  } catch (const kj::Exception &e) {
+    KJ_ASSERT(e.getDescription() == "test error"_kj);
+    KJ_ASSERT(e.getFile() == "tests/ffi/lib.rs"_kj);
+  }
+
+  KJ_ASSERT(r_std_result_kj_exception_return_primitive() == 2020);
+  try {
+    r_std_result_kj_exception_fail_return_primitive();
+    KJ_ASSERT(false);
+  } catch (const kj::Exception &e) {
+    KJ_ASSERT(e.getDescription() == "test kj exception"_kj);
+    KJ_ASSERT(e.getFile() == "tests/ffi/lib.rs"_kj);
+  }
+
+  KJ_ASSERT(r_result_kj_exception_return_primitive() == 2020);
+  try {
+    r_result_kj_exception_fail_return_primitive();
+    KJ_ASSERT(false);
+  } catch (const kj::Exception &e) {
+    KJ_ASSERT(e.getDescription() == "test kj exception"_kj);
     KJ_ASSERT(e.getFile() == "tests/ffi/lib.rs"_kj);
   }
 

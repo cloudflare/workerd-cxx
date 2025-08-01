@@ -3,8 +3,8 @@
 
 use crate::exception::repr;
 use crate::exception::Exception;
+use alloc::string::String;
 use alloc::string::ToString;
-use core::fmt::Display;
 use core::ptr::{self, NonNull};
 use core::result::Result as StdResult;
 
@@ -20,7 +20,10 @@ impl Result {
         }
     }
 
-    pub(crate) fn error(msg: &str, file: &str, line: u32) -> Self {
+    pub(crate) fn error<E: ToKjException>(err: E, file: &str, line: u32) -> Self {
+        let err = err.to_kj_exception();
+        let msg = err.description();
+
         let err = unsafe {
             repr::new(
                 msg.as_ptr(),
@@ -36,14 +39,14 @@ impl Result {
 
 pub unsafe fn r#try<T, E>(ret: *mut T, result: StdResult<T, E>, file: &str, line: u32) -> Result
 where
-    E: Display,
+    E: ToKjException,
 {
     match result {
         Ok(ok) => {
             unsafe { ptr::write(ret, ok) }
             Result::ok()
         }
-        Err(err) => Result::error(&err.to_string(), file, line),
+        Err(err) => Result::error(err.to_kj_exception(), file, line),
     }
 }
 
@@ -61,5 +64,48 @@ impl Result {
 impl Drop for Result {
     fn drop(&mut self) {
         unsafe { repr::drop_in_place(self.err) }
+    }
+}
+
+pub struct KjException {
+    description: String,
+}
+
+impl KjException {
+    pub fn new(description: String) -> Self {
+        Self { description }
+    }
+
+    pub fn description(&self) -> &str {
+        &self.description
+    }
+}
+
+impl core::fmt::Debug for KjException {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        f.debug_struct("KjException").field("description", &self.description).finish()
+    }
+}
+
+pub trait ToKjException {
+    fn to_kj_exception(self) -> KjException;
+}
+
+impl ToKjException for std::io::Error {
+    fn to_kj_exception(self) -> KjException {
+        KjException::new(self.to_string())
+    }
+}
+
+impl ToKjException for alloc::string::String {
+    fn to_kj_exception(self) -> KjException {
+        KjException::new(self)
+    }
+}
+
+
+impl ToKjException for KjException {
+    fn to_kj_exception(self) -> KjException {
+        self
     }
 }
