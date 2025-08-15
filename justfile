@@ -31,14 +31,20 @@ rustfmt:
     bazel run @rules_rust//:rustfmt
 
 clang-format:
-    clang-format -i include/*.h src/*.cc tests/**/*.h tests/**/*.cc kj-rs/*.h kj-rs/*.c++ kj-rs/tests/*.h kj-rs/tests/*.c++
+    clang-format -i include/*.h src/*.cc tests/**/*.h tests/**/*.cc kj-rs/**/*.h kj-rs/**/*.c++
 
 clang-tidy:
     {{CLANG_TIDY}} -p . src/cxx.cc include/cxx.h -warnings-as-errors="*"
 
 compile-commands:
     bazel run @hedron_compile_commands//:refresh_all
-    
+
+profile-async-stream-test:
+    bazel build --config=bench //kj-rs/tests:async-stream-test
+    bazel test --test_output=all --config=bench //kj-rs/tests:async-stream-test
+    perf record -F max --call-graph lbr ./bazel-bin/kj-rs/tests/async-stream-test
+    perf script report flamegraph
+
 # called by rust-analyzer discoverConfig (quiet recipe with no output)
 @_rust-analyzer:
   rm -rf ./rust-project.json
