@@ -10,7 +10,7 @@ const BRIDGE0: &str = r#"
     }
 "#;
 
-const BRIDGE1: &str = r#"
+const BRIDGE1: &str = r"
     #[cxx::bridge]
     mod ffi {
         #[derive(JsgStruct)]
@@ -19,7 +19,7 @@ const BRIDGE1: &str = r#"
             field2: String,
         }
     }
-"#;
+";
 
 #[test]
 fn test_extern_c_function() {
@@ -34,8 +34,10 @@ fn test_extern_c_function() {
 
 #[test]
 fn test_impl_annotation() {
-    let mut opt = Opt::default();
-    opt.cxx_impl_annotations = Some("ANNOTATION".to_owned());
+    let opt = Opt {
+        cxx_impl_annotations: Some("ANNOTATION".to_owned()),
+        ..Default::default()
+    };
     let source = BRIDGE0.parse().unwrap();
     let generated = generate_header_and_cc(source, &opt).unwrap();
     let output = str::from_utf8(&generated.implementation).unwrap();
