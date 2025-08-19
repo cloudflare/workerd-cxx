@@ -73,6 +73,7 @@ cc_library(
         "ffi/tests.cc",
         ":bridge/source",
         ":module/source",
+        "//kj-rs:bridge/source",
     ],
     hdrs = ["ffi/tests.h"],
     linkstatic = True,
@@ -81,6 +82,8 @@ cc_library(
         ":jsg",
         ":module/include",
         "//:core",
+        "//kj-rs:bridge/include",
+        "//kj-rs:kj-rs-lib",
     ],
 )
 
