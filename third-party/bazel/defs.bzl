@@ -300,6 +300,7 @@ _NORMAL_DEPENDENCIES = {
             "codespan-reporting": Label("@vendor//:codespan-reporting-0.12.0"),
             "foldhash": Label("@vendor//:foldhash-0.1.5"),
             "futures": Label("@vendor//:futures-0.3.31"),
+            "libc": Label("@vendor//:libc-0.2.175"),
             "proc-macro2": Label("@vendor//:proc-macro2-1.0.94"),
             "quote": Label("@vendor//:quote-1.0.40"),
             "scratch": Label("@vendor//:scratch-1.0.8"),
@@ -330,6 +331,7 @@ _NORMAL_DEV_ALIASES = {
 _PROC_MACRO_DEPENDENCIES = {
     "": {
         _COMMON_CONDITION: {
+            "async-trait": Label("@vendor//:async-trait-0.1.89"),
             "rustversion": Label("@vendor//:rustversion-1.0.20"),
         },
     },
@@ -435,6 +437,16 @@ def crate_repositories():
         urls = ["https://static.crates.io/crates/anstyle/1.0.10/download"],
         strip_prefix = "anstyle-1.0.10",
         build_file = Label("//third-party/bazel:BUILD.anstyle-1.0.10.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "vendor__async-trait-0.1.89",
+        sha256 = "9035ad2d096bed7955a320ee7e2230574d28fd3c3a0f186cbea1ff3c7eed5dbb",
+        type = "tar.gz",
+        urls = ["https://static.crates.io/crates/async-trait/0.1.89/download"],
+        strip_prefix = "async-trait-0.1.89",
+        build_file = Label("//third-party/bazel:BUILD.async-trait-0.1.89.bazel"),
     )
 
     maybe(
@@ -655,6 +667,16 @@ def crate_repositories():
         urls = ["https://static.crates.io/crates/itoa/1.0.15/download"],
         strip_prefix = "itoa-1.0.15",
         build_file = Label("//third-party/bazel:BUILD.itoa-1.0.15.bazel"),
+    )
+
+    maybe(
+        http_archive,
+        name = "vendor__libc-0.2.175",
+        sha256 = "6a82ae493e598baaea5209805c49bbf2ea7de956d50d7da0da1164f9c6d28543",
+        type = "tar.gz",
+        urls = ["https://static.crates.io/crates/libc/0.2.175/download"],
+        strip_prefix = "libc-0.2.175",
+        build_file = Label("//third-party/bazel:BUILD.libc-0.2.175.bazel"),
     )
 
     maybe(
@@ -1028,11 +1050,13 @@ def crate_repositories():
     )
 
     return [
+        struct(repo = "vendor__async-trait-0.1.89", is_dev_dep = False),
         struct(repo = "vendor__cc-1.2.20", is_dev_dep = False),
         struct(repo = "vendor__clap-4.5.33", is_dev_dep = False),
         struct(repo = "vendor__codespan-reporting-0.12.0", is_dev_dep = False),
         struct(repo = "vendor__foldhash-0.1.5", is_dev_dep = False),
         struct(repo = "vendor__futures-0.3.31", is_dev_dep = False),
+        struct(repo = "vendor__libc-0.2.175", is_dev_dep = False),
         struct(repo = "vendor__proc-macro2-1.0.94", is_dev_dep = False),
         struct(repo = "vendor__quote-1.0.40", is_dev_dep = False),
         struct(repo = "vendor__rustversion-1.0.20", is_dev_dep = False),
