@@ -1,0 +1,114 @@
+load("//tools/bazel:rust_cxx_bridge.bzl", "rust_cxx_bridge")
+load("@rules_rust//rust:defs.bzl", "rust_library", "rust_test")
+
+rust_cxx_bridge(
+    name = "bridge",
+    src = "ffi.rs",
+    hdrs = ["bridge.h"],
+    include_prefix = "kj-rs/io",
+    deps = [
+        "//kj-rs",
+        "@capnp-cpp//src/kj:kj",
+        "@capnp-cpp//src/kj:kj-async",
+        "@workerd-cxx//:cxx",
+    ],
+)
+
+cc_library(
+    name = "bridge_cpp",
+    srcs = ["bridge.c++"],
+    hdrs = ["bridge.h"],
+    include_prefix = "kj-rs/io",
+    deps = [
+        ":bridge/include",
+        "@capnp-cpp//src/kj:kj",
+        "@capnp-cpp//src/kj:kj-async",
+    ],
+)
+
+rust_library(
+    name = "io",
+    srcs = [
+        "ffi.rs",
+        "impl.rs",
+        "interface.rs",
+        "lib.rs",
+    ],
+    edition = "2024",
+    proc_macro_deps = [
+        "@crates.io//:async-trait",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":bridge_cpp",
+        "//kj-rs",
+        "@crates.io//:futures",
+        "@crates.io//:libc",
+        "@workerd-cxx//:cxx",
+    ],
+)
+
+rust_test(
+    name = "io_test",
+    crate = ":io",
+    edition = "2024",
+)
+
+rust_cxx_bridge(
+    name = "tests_bridge",
+    src = "tests.rs",
+    hdrs = ["tests.h"],
+    include_prefix = "kj-rs/io",
+    deps = [
+        ":bridge_cpp",
+        ":io",
+        "@capnp-cpp//src/kj:kj",
+        "@capnp-cpp//src/kj:kj-async",
+        "@workerd-cxx//:cxx",
+    ],
+)
+
+rust_library(
+    name = "io_tests",
+    srcs = ["tests.rs"],
+    edition = "2024",
+    proc_macro_deps = [
+        "@crates.io//:async-trait",
+    ],
+    visibility = ["//visibility:public"],
+    deps = [
+        ":io",
+        ":tests_bridge",
+        "//kj-rs",
+        "@crates.io//:futures",
+        "@workerd-cxx//:cxx",
+    ],
+)
+
+rust_test(
+    name = "io_tests_test",
+    crate = ":io_tests",
+    edition = "2024",
+)
+
+cc_test(
+    name = "io_cpp_tests",
+    size = "medium",
+    srcs = [
+        "tests.c++",
+        "tests.h",
+    ],
+    linkstatic = True,
+    deps = [
+        ":bridge",
+        ":bridge/include",
+        ":bridge_cpp",
+        ":io",
+        ":io_tests",
+        ":tests_bridge",
+        "@capnp-cpp//src/kj:kj",
+        "@capnp-cpp//src/kj:kj-async",
+        "@capnp-cpp//src/kj:kj-test",
+        "@workerd-cxx//:cxx",
+    ],
+)

@@ -32,6 +32,18 @@ filegroup(
 
 # Workspace Member Dependencies
 alias(
+    name = "async-trait-0.1.89",
+    actual = "@vendor__async-trait-0.1.89//:async_trait",
+    tags = ["manual"],
+)
+
+alias(
+    name = "async-trait",
+    actual = "@vendor__async-trait-0.1.89//:async_trait",
+    tags = ["manual"],
+)
+
+alias(
     name = "cc-1.2.20",
     actual = "@vendor__cc-1.2.20//:cc",
     tags = ["manual"],
@@ -88,6 +100,18 @@ alias(
 alias(
     name = "futures",
     actual = "@vendor__futures-0.3.31//:futures",
+    tags = ["manual"],
+)
+
+alias(
+    name = "libc-0.2.175",
+    actual = "@vendor__libc-0.2.175//:libc",
+    tags = ["manual"],
+)
+
+alias(
+    name = "libc",
+    actual = "@vendor__libc-0.2.175//:libc",
     tags = ["manual"],
 )
 
