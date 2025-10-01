@@ -207,7 +207,7 @@ pub async fn new_wrapped_waker_future_void() -> Result<()> {
 }
 
 pub async fn new_errored_future_void() -> Result<()> {
-    Err(std::io::Error::new(std::io::ErrorKind::Other, "test error"))
+    Err(std::io::Error::other("test error"))
 }
 
 pub async fn new_kj_errored_future_void() -> std::result::Result<(), cxx::KjError> {

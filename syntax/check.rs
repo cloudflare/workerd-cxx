@@ -701,7 +701,7 @@ fn check_mut_return_restriction(cx: &mut Check, efn: &ExternFn) {
         found: bool,
     }
 
-    impl<'t, 'a> Visit<'t> for FindLifetimeMut<'a> {
+    impl<'t> Visit<'t> for FindLifetimeMut<'_> {
         fn visit_type(&mut self, ty: &'t Type) {
             self.found |= match ty {
                 Type::Ref(ty) => ty.mutable,

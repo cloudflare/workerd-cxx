@@ -77,15 +77,15 @@ impl Type {
     }
 }
 
-impl<'a> PartialEq for NamedImplKey<'a> {
+impl PartialEq for NamedImplKey<'_> {
     fn eq(&self, other: &Self) -> bool {
         PartialEq::eq(self.rust, other.rust)
     }
 }
 
-impl<'a> Eq for NamedImplKey<'a> {}
+impl Eq for NamedImplKey<'_> {}
 
-impl<'a> Hash for NamedImplKey<'a> {
+impl Hash for NamedImplKey<'_> {
     fn hash<H: Hasher>(&self, hasher: &mut H) {
         self.rust.hash(hasher);
     }

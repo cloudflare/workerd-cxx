@@ -378,7 +378,6 @@ fn expand_enum(enm: &Enum) -> TokenStream {
         #[repr(transparent)]
         #enum_def
 
-        #[automatically_derived]
         #[allow(non_upper_case_globals)]
         impl #ident {
             #(#variants)*
@@ -801,7 +800,6 @@ fn expand_cxx_function_shim(efn: &ExternFn, types: &Types) -> TokenStream {
                 &elided_generics
             };
             quote_spanned! {ident.span()=>
-                #[automatically_derived]
                 impl #generics #receiver_ident #receiver_generics {
                     #doc
                     #attrs
@@ -1571,7 +1569,7 @@ fn expand_unique_ptr(
                 }
                 let mut repr = ::cxx::core::mem::MaybeUninit::uninit();
                 unsafe {
-                    __uninit(&mut repr).cast::<#ident #ty_generics>().write(value);
+                    __uninit(&raw mut repr).cast::<#ident #ty_generics>().write(value);
                 }
                 repr
             }
@@ -1597,7 +1595,7 @@ fn expand_unique_ptr(
                 }
                 let mut repr = ::cxx::core::mem::MaybeUninit::uninit();
                 unsafe {
-                    __null(&mut repr);
+                    __null(&raw mut repr);
                 }
                 repr
             }
@@ -1609,7 +1607,7 @@ fn expand_unique_ptr(
                 }
                 let mut repr = ::cxx::core::mem::MaybeUninit::uninit();
                 unsafe {
-                    __raw(&mut repr, raw.cast());
+                    __raw(&raw mut repr, raw.cast());
                 }
                 repr
             }
@@ -1618,14 +1616,14 @@ fn expand_unique_ptr(
                     #[link_name = #link_get]
                     fn __get(this: *const ::cxx::core::mem::MaybeUninit<*mut ::cxx::core::ffi::c_void>) -> *const ::cxx::core::ffi::c_void;
                 }
-                unsafe { __get(&repr).cast() }
+                unsafe { __get(&raw const repr).cast() }
             }
             unsafe fn __release(mut repr: ::cxx::core::mem::MaybeUninit<*mut ::cxx::core::ffi::c_void>) -> *mut Self {
                 #UnsafeExtern extern "C" {
                     #[link_name = #link_release]
                     fn __release(this: *mut ::cxx::core::mem::MaybeUninit<*mut ::cxx::core::ffi::c_void>) -> *mut ::cxx::core::ffi::c_void;
                 }
-                unsafe { __release(&mut repr).cast() }
+                unsafe { __release(&raw mut repr).cast() }
             }
             unsafe fn __drop(mut repr: ::cxx::core::mem::MaybeUninit<*mut ::cxx::core::ffi::c_void>) {
                 #UnsafeExtern extern "C" {
@@ -1633,7 +1631,7 @@ fn expand_unique_ptr(
                     fn __drop(this: *mut ::cxx::core::mem::MaybeUninit<*mut ::cxx::core::ffi::c_void>);
                 }
                 unsafe {
-                    __drop(&mut repr);
+                    __drop(&raw mut repr);
                 }
             }
         }
@@ -2030,7 +2028,7 @@ fn expand_cxx_vector(
                 }
                 let mut repr = ::cxx::core::mem::MaybeUninit::uninit();
                 unsafe {
-                    __unique_ptr_null(&mut repr);
+                    __unique_ptr_null(&raw mut repr);
                 }
                 repr
             }
@@ -2041,7 +2039,7 @@ fn expand_cxx_vector(
                 }
                 let mut repr = ::cxx::core::mem::MaybeUninit::uninit();
                 unsafe {
-                    __unique_ptr_raw(&mut repr, raw);
+                    __unique_ptr_raw(&raw mut repr, raw);
                 }
                 repr
             }
@@ -2050,14 +2048,14 @@ fn expand_cxx_vector(
                     #[link_name = #link_unique_ptr_get]
                     fn __unique_ptr_get #impl_generics(this: *const ::cxx::core::mem::MaybeUninit<*mut ::cxx::core::ffi::c_void>) -> *const ::cxx::CxxVector<#elem #ty_generics>;
                 }
-                unsafe { __unique_ptr_get(&repr) }
+                unsafe { __unique_ptr_get(&raw const repr) }
             }
             unsafe fn __unique_ptr_release(mut repr: ::cxx::core::mem::MaybeUninit<*mut ::cxx::core::ffi::c_void>) -> *mut ::cxx::CxxVector<Self> {
                 #UnsafeExtern extern "C" {
                     #[link_name = #link_unique_ptr_release]
                     fn __unique_ptr_release #impl_generics(this: *mut ::cxx::core::mem::MaybeUninit<*mut ::cxx::core::ffi::c_void>) -> *mut ::cxx::CxxVector<#elem #ty_generics>;
                 }
-                unsafe { __unique_ptr_release(&mut repr) }
+                unsafe { __unique_ptr_release(&raw mut repr) }
             }
             unsafe fn __unique_ptr_drop(mut repr: ::cxx::core::mem::MaybeUninit<*mut ::cxx::core::ffi::c_void>) {
                 #UnsafeExtern extern "C" {
@@ -2065,7 +2063,7 @@ fn expand_cxx_vector(
                     fn __unique_ptr_drop(this: *mut ::cxx::core::mem::MaybeUninit<*mut ::cxx::core::ffi::c_void>);
                 }
                 unsafe {
-                    __unique_ptr_drop(&mut repr);
+                    __unique_ptr_drop(&raw mut repr);
                 }
             }
         }
