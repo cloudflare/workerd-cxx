@@ -1,7 +1,7 @@
 use crate::atom::Atom::{self, *};
 use crate::{derive, Trait, Type, Types};
 
-impl<'a> Types<'a> {
+impl Types<'_> {
     pub fn is_guaranteed_pod(&self, ty: &Type) -> bool {
         match ty {
             Type::Ident(ident) => {

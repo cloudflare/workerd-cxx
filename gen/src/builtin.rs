@@ -35,7 +35,7 @@ pub struct Builtins<'a> {
     pub content: Content<'a>,
 }
 
-impl<'a> Builtins<'a> {
+impl Builtins<'_> {
     pub fn new() -> Self {
         Builtins::default()
     }

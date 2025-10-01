@@ -39,7 +39,7 @@ impl UnresolvedName for NamedType {
     }
 }
 
-impl<'a> UnresolvedName for NamedImplKey<'a> {
+impl UnresolvedName for NamedImplKey<'_> {
     fn ident(&self) -> &Ident {
         self.rust
     }

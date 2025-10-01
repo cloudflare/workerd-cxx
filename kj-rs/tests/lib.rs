@@ -5,10 +5,6 @@
 #![allow(clippy::cast_possible_truncation)]
 #![allow(clippy::should_panic_without_expect)]
 #![allow(clippy::missing_panics_doc)]
-#![allow(clippy::must_use_candidate)]
-#![allow(clippy::cast_possible_truncation)]
-#![allow(clippy::should_panic_without_expect)]
-#![allow(clippy::missing_panics_doc)]
 
 mod test_date;
 mod test_futures;
@@ -36,6 +32,7 @@ type Result<T> = std::io::Result<T>;
 type Error = std::io::Error;
 
 #[cxx::bridge(namespace = "kj_rs_demo")]
+#[allow(clippy::elidable_lifetime_names)]
 mod ffi {
     struct Shared {
         i: i64,

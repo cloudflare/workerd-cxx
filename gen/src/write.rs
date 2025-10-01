@@ -1453,7 +1453,7 @@ impl ToTypename for Ident {
     }
 }
 
-impl<'a> ToTypename for UniquePtr<'a> {
+impl ToTypename for UniquePtr<'_> {
     fn to_typename(&self, types: &Types) -> String {
         match self {
             UniquePtr::Ident(ident) => ident.to_typename(types),
@@ -1474,7 +1474,7 @@ impl ToMangled for Ident {
     }
 }
 
-impl<'a> ToMangled for UniquePtr<'a> {
+impl ToMangled for UniquePtr<'_> {
     fn to_mangled(&self, types: &Types) -> Symbol {
         match self {
             UniquePtr::Ident(ident) => ident.to_mangled(types),

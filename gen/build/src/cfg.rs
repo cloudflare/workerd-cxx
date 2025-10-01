@@ -315,7 +315,7 @@ pub static mut CFG: Cfg = Cfg {
     marker: PhantomData,
 };
 
-impl<'a> Debug for Cfg<'a> {
+impl Debug for Cfg<'_> {
     fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
         let Self {
             include_prefix,
@@ -431,7 +431,7 @@ mod r#impl {
         CFG,
     }
 
-    impl<'a> Debug for Cfg<'a> {
+    impl Debug for Cfg<'_> {
         fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
             if let Cfg::Mut(cfg) = self {
                 Debug::fmt(cfg, formatter)
@@ -449,7 +449,7 @@ mod r#impl {
                 cfg
             } else {
                 let cfg = CONST_DEREFS.with(|derefs| -> *mut super::Cfg {
-                    &mut **derefs
+                    &raw mut **derefs
                         .borrow_mut()
                         .entry(self.handle())
                         .or_insert_with(|| Box::new(Cfg::current()))
@@ -459,7 +459,7 @@ mod r#impl {
         }
     }
 
-    impl<'a> DerefMut for Cfg<'a> {
+    impl DerefMut for Cfg<'_> {
         fn deref_mut(&mut self) -> &mut Self::Target {
             if let Cfg::CFG = self {
                 CONST_DEREFS.with(|derefs| derefs.borrow_mut().remove(&self.handle()));
@@ -472,7 +472,7 @@ mod r#impl {
         }
     }
 
-    impl<'a> Drop for Cfg<'a> {
+    impl Drop for Cfg<'_> {
         fn drop(&mut self) {
             if let Cfg::Mut(cfg) = self {
                 let super::Cfg {

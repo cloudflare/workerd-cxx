@@ -98,7 +98,7 @@ mod unordered {
 
 pub struct Iter<'s, 'a, T>(slice::Iter<'s, &'a T>);
 
-impl<'s, 'a, T> Iterator for Iter<'s, 'a, T> {
+impl<'a, T> Iterator for Iter<'_, 'a, T> {
     type Item = &'a T;
 
     fn next(&mut self) -> Option<Self::Item> {

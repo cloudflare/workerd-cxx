@@ -236,7 +236,7 @@ where
     }
 }
 
-impl<'a, T> ExactSizeIterator for Iter<'a, T>
+impl<T> ExactSizeIterator for Iter<'_, T>
 where
     T: VectorElement,
 {
@@ -245,7 +245,7 @@ where
     }
 }
 
-impl<'a, T> FusedIterator for Iter<'a, T> where T: VectorElement {}
+impl<T> FusedIterator for Iter<'_, T> where T: VectorElement {}
 
 /// Iterator over elements of a `CxxVector` by pinned mutable reference.
 ///
@@ -290,7 +290,7 @@ where
     }
 }
 
-impl<'a, T> ExactSizeIterator for IterMut<'a, T>
+impl<T> ExactSizeIterator for IterMut<'_, T>
 where
     T: VectorElement,
 {
@@ -299,7 +299,7 @@ where
     }
 }
 
-impl<'a, T> FusedIterator for IterMut<'a, T> where T: VectorElement {}
+impl<T> FusedIterator for IterMut<'_, T> where T: VectorElement {}
 
 impl<T> Debug for CxxVector<T>
 where

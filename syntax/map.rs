@@ -26,7 +26,7 @@ mod ordered {
             }
         }
 
-        pub fn iter(&self) -> Iter<K, V> {
+        pub fn iter(&self) -> Iter<'_, K, V> {
             Iter(self.vec.iter())
         }
 
@@ -112,7 +112,7 @@ mod unordered {
             self.0.get(key)
         }
 
-        pub fn entry(&mut self, key: K) -> Entry<K, V> {
+        pub fn entry(&mut self, key: K) -> Entry<'_, K, V> {
             self.0.entry(key)
         }
 

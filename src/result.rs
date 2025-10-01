@@ -31,6 +31,7 @@ pub(crate) mod repr {
             error.into_kj_exception(file, line).into()
         }
 
+        #[allow(clippy::manual_dangling_ptr)]
         pub(crate) fn canceled() -> Result {
             Self {
                 exception: 0x1 as *mut KjException,

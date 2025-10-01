@@ -19,7 +19,7 @@ impl Namespace {
         segments: Vec::new(),
     };
 
-    pub fn iter(&self) -> Iter<Ident> {
+    pub fn iter(&self) -> Iter<'_, Ident> {
         self.segments.iter()
     }
 

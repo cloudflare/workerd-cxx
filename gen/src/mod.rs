@@ -6,7 +6,6 @@
     clippy::default_trait_access,
     clippy::enum_glob_use,
     clippy::items_after_statements,
-    clippy::match_on_vec_items,
     clippy::match_same_arms,
     clippy::missing_errors_doc,
     clippy::missing_panics_doc,

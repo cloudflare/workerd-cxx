@@ -94,14 +94,14 @@ impl<'a> OutFile<'a> {
     }
 }
 
-impl<'a> Write for Content<'a> {
+impl Write for Content<'_> {
     fn write_str(&mut self, s: &str) -> fmt::Result {
         self.write(s);
         Ok(())
     }
 }
 
-impl<'a> PartialEq for Content<'a> {
+impl PartialEq for Content<'_> {
     fn eq(&self, _other: &Self) -> bool {
         true
     }
