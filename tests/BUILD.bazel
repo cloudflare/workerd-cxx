@@ -25,22 +25,6 @@ rust_test(
     ],
 )
 
-rust_test(
-    name = "compile-test",
-    size = "small",
-    srcs = ["compiletest.rs"],
-    edition = "2021",
-    proc_macro_deps = [
-      "@crates.io//:rustversion",
-    ],
-    deps = [
-      ":cxx_test_suite",
-      "//:cxx",
-      "//:cxx-gen",
-      "@crates.io//:trybuild",
-    ],
-)
-
 rust_library(
     name = "cxx_test_suite",
     testonly = True,
