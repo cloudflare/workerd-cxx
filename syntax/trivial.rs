@@ -130,7 +130,7 @@ pub fn as_what<'a>(name: &'a Pair, reasons: &'a [TrivialReason]) -> impl Display
         reasons: &'a [TrivialReason<'a>],
     }
 
-    impl<'a> Display for Description<'a> {
+    impl Display for Description<'_> {
         fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
             let mut field_of = Set::new();
             let mut argument_of = Set::new();

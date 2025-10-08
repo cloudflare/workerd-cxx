@@ -38,6 +38,7 @@ pub trait JsgStruct {}
 
 #[cxx::bridge(namespace = "kj_rs")]
 #[allow(clippy::needless_lifetimes)]
+#[allow(clippy::elidable_lifetime_names)]
 mod ffi {
 
     /// Representation of a `GuardedRustPromiseAwaiter` in C++. The size of the blob should match.

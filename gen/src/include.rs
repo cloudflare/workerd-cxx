@@ -48,7 +48,7 @@ pub struct Includes<'a> {
     pub jsg: bool,
 }
 
-impl<'a> Includes<'a> {
+impl Includes<'_> {
     pub fn new() -> Self {
         Includes::default()
     }
@@ -203,7 +203,7 @@ pub fn write(out: &mut OutFile) {
     }
 }
 
-impl<'i, 'a> Extend<&'i Include> for Includes<'a> {
+impl<'i> Extend<&'i Include> for Includes<'_> {
     fn extend<I: IntoIterator<Item = &'i Include>>(&mut self, iter: I) {
         self.custom.extend(iter.into_iter().cloned());
     }
@@ -226,7 +226,7 @@ impl<'a> Deref for Includes<'a> {
     }
 }
 
-impl<'a> DerefMut for Includes<'a> {
+impl DerefMut for Includes<'_> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.content
     }

@@ -44,7 +44,7 @@ impl<'a> Types<'a> {
         fn visit<'a>(all: &mut OrderedSet<&'a Type>, ty: &'a Type) {
             struct CollectTypes<'s, 'a>(&'s mut OrderedSet<&'a Type>);
 
-            impl<'s, 'a> Visit<'a> for CollectTypes<'s, 'a> {
+            impl<'a> Visit<'a> for CollectTypes<'_, 'a> {
                 fn visit_type(&mut self, ty: &'a Type) {
                     self.0.insert(ty);
                     visit::visit_type(self, ty);

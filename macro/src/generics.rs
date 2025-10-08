@@ -33,7 +33,7 @@ pub(crate) fn split_for_impl<'a>(
     (impl_generics, ty_generics)
 }
 
-impl<'a> ToTokens for ImplGenerics<'a> {
+impl ToTokens for ImplGenerics<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         if let Some(imp) = self.explicit_impl {
             imp.impl_generics.to_tokens(tokens);
@@ -43,7 +43,7 @@ impl<'a> ToTokens for ImplGenerics<'a> {
     }
 }
 
-impl<'a> ToTokens for TyGenerics<'a> {
+impl ToTokens for TyGenerics<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         if let Some(imp) = self.explicit_impl {
             imp.ty_generics.to_tokens(tokens);
@@ -70,7 +70,7 @@ pub(crate) fn to_underscore_lifetimes(generics: &Lifetimes) -> UnderscoreLifetim
     UnderscoreLifetimes { generics }
 }
 
-impl<'a> ToTokens for UnderscoreLifetimes<'a> {
+impl ToTokens for UnderscoreLifetimes<'_> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let Lifetimes {
             lt_token,

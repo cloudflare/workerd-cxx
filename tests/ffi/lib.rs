@@ -26,6 +26,7 @@ use std::mem::MaybeUninit;
 use std::os::raw::c_char;
 
 #[cxx::bridge(namespace = "tests")]
+#[allow(clippy::elidable_lifetime_names)]
 pub mod ffi {
     #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
     struct Shared {
@@ -255,7 +256,7 @@ pub mod ffi {
         fn c_return_borrow<'a>(s: &'a CxxString) -> UniquePtr<Borrow<'a>>;
 
         #[rust_name = "c_return_borrow_elided"]
-        fn c_return_borrow(s: &CxxString) -> UniquePtr<Borrow>;
+        fn c_return_borrow<'a>(s: &'a CxxString) -> UniquePtr<Borrow<'a>>;
 
         fn const_member(self: &Borrow);
         fn nonconst_member(self: Pin<&mut Borrow>);

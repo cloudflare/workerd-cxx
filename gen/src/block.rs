@@ -9,7 +9,7 @@ pub enum Block<'a> {
     ExternC,
 }
 
-impl<'a> Block<'a> {
+impl Block<'_> {
     pub fn write_begin(self, out: &mut String) {
         if let Block::InlineNamespace(_) = self {
             out.push_str("inline ");
