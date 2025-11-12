@@ -11,9 +11,9 @@ cc = "1.0.83"
 clap = { version = "4", default-features = false, features = ["error-context", "help", "std", "usage"] }
 codespan-reporting = "0.12"
 foldhash = "0.1"
-proc-macro2 = { version = "1.0.58", features = ["span-locations"] }
-quote = "1.0.4"
+proc-macro2 = { version = "1", features = ["span-locations"] }
+quote = "1.0.42"
 rustversion = "1"
 scratch = "1"
-syn = { version = "2.0.1", features = ["full"] }
+syn = { version = "2", features = ["full"] }
 trybuild = "1"
