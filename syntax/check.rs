@@ -81,6 +81,7 @@ fn check_type(cx: &mut Check, ty: &Type) {
         Type::Ref(ty) => check_type_ref(cx, ty),
         Type::KjMaybe(ty) => check_type_kj_maybe(cx, ty),
         Type::Ptr(ty) => check_type_ptr(cx, ty),
+        Type::NonNull(ty) => check_type_nonnull(cx, ty),
         Type::Array(array) => check_type_array(cx, array),
         Type::Fn(ty) => check_type_fn(cx, ty),
         Type::SliceRef(ty) => check_type_slice_ref(cx, ty),
@@ -290,7 +291,7 @@ fn check_type_kj_maybe(cx: &mut Check, ptr: &Ty1) {
                 Some(_) => {}
             }
         }
-        Type::Ptr(_) => {
+        Type::Ptr(_) | Type::NonNull(_) => {
             cx.error(
                 ptr,
                 "kj::Maybe<*T> is not allowed. Use Maybe<&T> or Maybe<Maybe<&T>> instead",
@@ -378,6 +379,19 @@ fn check_type_ptr(cx: &mut Check, ty: &Ptr) {
     cx.error(ty, "unsupported pointer type");
 }
 
+fn check_type_nonnull(cx: &mut Check, ty: &Ty1) {
+    match &ty.inner {
+        Type::Fn(_) | Type::Void(_) => {}
+        Type::Ref(_) => {
+            cx.error(ty, "C++ does not allow pointer to reference as a type");
+            return;
+        }
+        _ => return,
+    }
+
+    cx.error(ty, "unsupported NonNull type");
+}
+
 fn check_type_slice_ref(cx: &mut Check, ty: &SliceRef) {
     let supported = !is_unsized(cx, &ty.inner)
         || match &ty.inner {
@@ -413,7 +427,7 @@ fn check_type_fn(cx: &mut Check, ty: &Signature) {
     }
 
     for arg in &ty.args {
-        if let Type::Ptr(_) = arg.ty {
+        if let Type::Ptr(_) | Type::NonNull(_) = arg.ty {
             if ty.unsafety.is_none() {
                 cx.error(
                     arg,
@@ -583,7 +597,7 @@ fn check_api_fn(cx: &mut Check, efn: &ExternFn) {
                     "passing a function pointer from C++ to Rust is not implemented yet",
                 );
             }
-        } else if let Type::Ptr(_) = arg.ty {
+        } else if let Type::Ptr(_) | Type::NonNull(_) = arg.ty {
             if efn.sig.unsafety.is_none() {
                 cx.error(
                     arg,
@@ -797,6 +811,7 @@ fn is_unsized(cx: &mut Check, ty: &Type) -> bool {
         | Type::KjMaybe(_)
         | Type::Ref(_)
         | Type::Ptr(_)
+        | Type::NonNull(_)
         | Type::Str(_)
         | Type::KjDate(_)
         | Type::SliceRef(_) => false,
@@ -878,6 +893,7 @@ fn describe(cx: &mut Check, ty: &Type) -> String {
         Type::KjDate(_) => "kj::Date".to_owned(),
         Type::Ref(_) => "reference".to_owned(),
         Type::Ptr(_) => "raw pointer".to_owned(),
+        Type::NonNull(_) => "NonNull pointer".to_owned(),
         Type::Str(_) => "&str".to_owned(),
         Type::CxxVector(_) => "C++ vector".to_owned(),
         Type::SliceRef(_) => "slice".to_owned(),

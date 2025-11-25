@@ -24,6 +24,7 @@ where
         | Type::RustVec(ty) => visitor.visit_type(&ty.inner),
         Type::Ref(r) => visitor.visit_type(&r.inner),
         Type::Ptr(p) => visitor.visit_type(&p.inner),
+        Type::NonNull(ty) => visitor.visit_type(&ty.inner),
         Type::Array(a) => visitor.visit_type(&a.inner),
         Type::SliceRef(s) => visitor.visit_type(&s.inner),
         Type::Fn(fun) => {
