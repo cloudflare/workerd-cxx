@@ -32,38 +32,38 @@ filegroup(
 
 # Workspace Member Dependencies
 alias(
-    name = "cc-1.2.20",
-    actual = "@vendor__cc-1.2.20//:cc",
+    name = "cc-1.2.45",
+    actual = "@vendor__cc-1.2.45//:cc",
     tags = ["manual"],
 )
 
 alias(
     name = "cc",
-    actual = "@vendor__cc-1.2.20//:cc",
+    actual = "@vendor__cc-1.2.45//:cc",
     tags = ["manual"],
 )
 
 alias(
-    name = "clap-4.5.33",
-    actual = "@vendor__clap-4.5.33//:clap",
+    name = "clap-4.5.51",
+    actual = "@vendor__clap-4.5.51//:clap",
     tags = ["manual"],
 )
 
 alias(
     name = "clap",
-    actual = "@vendor__clap-4.5.33//:clap",
+    actual = "@vendor__clap-4.5.51//:clap",
     tags = ["manual"],
 )
 
 alias(
-    name = "codespan-reporting-0.12.0",
-    actual = "@vendor__codespan-reporting-0.12.0//:codespan_reporting",
+    name = "codespan-reporting-0.13.1",
+    actual = "@vendor__codespan-reporting-0.13.1//:codespan_reporting",
     tags = ["manual"],
 )
 
 alias(
     name = "codespan-reporting",
-    actual = "@vendor__codespan-reporting-0.12.0//:codespan_reporting",
+    actual = "@vendor__codespan-reporting-0.13.1//:codespan_reporting",
     tags = ["manual"],
 )
 
@@ -92,50 +92,50 @@ alias(
 )
 
 alias(
-    name = "proc-macro2-1.0.94",
-    actual = "@vendor__proc-macro2-1.0.94//:proc_macro2",
+    name = "proc-macro2-1.0.103",
+    actual = "@vendor__proc-macro2-1.0.103//:proc_macro2",
     tags = ["manual"],
 )
 
 alias(
     name = "proc-macro2",
-    actual = "@vendor__proc-macro2-1.0.94//:proc_macro2",
+    actual = "@vendor__proc-macro2-1.0.103//:proc_macro2",
     tags = ["manual"],
 )
 
 alias(
-    name = "quote-1.0.40",
-    actual = "@vendor__quote-1.0.40//:quote",
+    name = "quote-1.0.42",
+    actual = "@vendor__quote-1.0.42//:quote",
     tags = ["manual"],
 )
 
 alias(
     name = "quote",
-    actual = "@vendor__quote-1.0.40//:quote",
+    actual = "@vendor__quote-1.0.42//:quote",
     tags = ["manual"],
 )
 
 alias(
-    name = "rustversion-1.0.20",
-    actual = "@vendor__rustversion-1.0.20//:rustversion",
+    name = "rustversion-1.0.22",
+    actual = "@vendor__rustversion-1.0.22//:rustversion",
     tags = ["manual"],
 )
 
 alias(
     name = "rustversion",
-    actual = "@vendor__rustversion-1.0.20//:rustversion",
+    actual = "@vendor__rustversion-1.0.22//:rustversion",
     tags = ["manual"],
 )
 
 alias(
-    name = "scratch-1.0.8",
-    actual = "@vendor__scratch-1.0.8//:scratch",
+    name = "scratch-1.0.9",
+    actual = "@vendor__scratch-1.0.9//:scratch",
     tags = ["manual"],
 )
 
 alias(
     name = "scratch",
-    actual = "@vendor__scratch-1.0.8//:scratch",
+    actual = "@vendor__scratch-1.0.9//:scratch",
     tags = ["manual"],
 )
 
@@ -152,13 +152,13 @@ alias(
 )
 
 alias(
-    name = "syn-2.0.100",
-    actual = "@vendor__syn-2.0.100//:syn",
+    name = "syn-2.0.110",
+    actual = "@vendor__syn-2.0.110//:syn",
     tags = ["manual"],
 )
 
 alias(
     name = "syn",
-    actual = "@vendor__syn-2.0.100//:syn",
+    actual = "@vendor__syn-2.0.110//:syn",
     tags = ["manual"],
 )

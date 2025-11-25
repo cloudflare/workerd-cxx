@@ -16,9 +16,10 @@ cc_configure = use_extension("@rules_cc//cc:extensions.bzl", "cc_configure_exten
 use_repo(cc_configure, "local_config_cc")
 
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+
 # new versions of stable rust can't be linked with C++ binaries:
 # <https://github.com/bazelbuild/rules_rust/issues/3459>
-rust.toolchain(versions = [ "nightly/2025-09-18" ])
+rust.toolchain(versions = ["nightly/2025-09-18"])
 use_repo(rust, "rust_toolchains")
 
 register_toolchains("@rust_toolchains//:all")

@@ -117,9 +117,9 @@ rust_library(
         "@vendor__futures-io-0.3.31//:futures_io",
         "@vendor__futures-sink-0.3.31//:futures_sink",
         "@vendor__futures-task-0.3.31//:futures_task",
-        "@vendor__memchr-2.7.5//:memchr",
+        "@vendor__memchr-2.7.6//:memchr",
         "@vendor__pin-project-lite-0.2.16//:pin_project_lite",
         "@vendor__pin-utils-0.1.0//:pin_utils",
-        "@vendor__slab-0.4.10//:slab",
+        "@vendor__slab-0.4.11//:slab",
     ],
 )

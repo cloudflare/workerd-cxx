@@ -17,7 +17,7 @@ cargo_toml_env_vars(
 )
 
 rust_library(
-    name = "memchr",
+    name = "windows_sys",
     srcs = glob(
         include = ["**/*.rs"],
         allow_empty = True,
@@ -35,9 +35,14 @@ rust_library(
         ],
     ),
     crate_features = [
-        "alloc",
+        "Win32",
+        "Win32_Foundation",
+        "Win32_Storage",
+        "Win32_Storage_FileSystem",
+        "Win32_System",
+        "Win32_System_Console",
+        "Win32_System_SystemInformation",
         "default",
-        "std",
     ],
     crate_root = "src/lib.rs",
     edition = "2021",
@@ -49,7 +54,7 @@ rust_library(
     ],
     tags = [
         "cargo-bazel",
-        "crate-name=memchr",
+        "crate-name=windows-sys",
         "manual",
         "noclippy",
         "norustfmt",
@@ -97,5 +102,8 @@ rust_library(
         "@rules_rust//rust/platform:x86_64-unknown-uefi": [],
         "//conditions:default": ["@platforms//:incompatible"],
     }),
-    version = "2.7.5",
+    version = "0.61.2",
+    deps = [
+        "@vendor__windows-link-0.2.1//:windows_link",
+    ],
 )

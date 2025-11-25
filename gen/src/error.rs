@@ -152,7 +152,7 @@ fn display_syn_error(stderr: &mut dyn WriteColor, path: &Path, source: &str, err
     let diagnostic = diagnose(file, start_offset..end_offset, error);
 
     let config = Config::default();
-    let _ = term::emit(stderr, &config, &files, &diagnostic);
+    let _ = term::emit_to_write_style(stderr, &config, &files, &diagnostic);
 }
 
 fn diagnose(file: usize, range: Range<usize>, error: syn::Error) -> Diagnostic<usize> {
