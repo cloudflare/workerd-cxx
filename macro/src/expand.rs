@@ -604,6 +604,13 @@ fn expand_cxx_function_shim(efn: &ExternFn, types: &Types) -> TokenStream {
                     quote!(#var)
                 }
             }
+            Type::NonNull(ty) => {
+                if types.is_considered_improper_ctype(&ty.inner) {
+                    quote_spanned!(span=> #var.as_ptr().cast())
+                } else {
+                    quote_spanned!(span=> #var.as_ptr())
+                }
+            }
             Type::Str(_) => quote_spanned!(span=> ::cxx::private::RustStr::from(#var)),
             Type::SliceRef(ty) => match ty.mutable {
                 false => quote_spanned!(span=> ::cxx::private::RustSlice::from_ref(#var)),
@@ -728,6 +735,13 @@ fn expand_cxx_function_shim(efn: &ExternFn, types: &Types) -> TokenStream {
                         quote_spanned!(span=> #call.cast())
                     } else {
                         call
+                    }
+                }
+                Type::NonNull(ty) => {
+                    if types.is_considered_improper_ctype(&ty.inner) {
+                        quote_spanned!(span=> ::cxx::core::ptr::NonNull::new_unchecked(#call.cast()))
+                    } else {
+                        quote_spanned!(span=> ::cxx::core::ptr::NonNull::new_unchecked(#call))
                     }
                 }
                 Type::Str(_) => quote_spanned!(span=> #call.as_str()),
@@ -2139,6 +2153,14 @@ fn expand_extern_type(ty: &Type, types: &Types, proper: bool) -> TokenStream {
                 quote!(#star #mutability #constness ::cxx::core::ffi::c_void)
             } else {
                 quote!(#ty)
+            }
+        }
+        Type::NonNull(ty) => {
+            if proper && types.is_considered_improper_ctype(&ty.inner) {
+                quote!(*mut ::cxx::core::ffi::c_void)
+            } else {
+                let inner = expand_extern_type(&ty.inner, types, proper);
+                quote!(*mut #inner)
             }
         }
         Type::Str(ty) => {

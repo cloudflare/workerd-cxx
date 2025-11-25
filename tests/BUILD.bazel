@@ -101,3 +101,42 @@ rust_cxx_bridge(
         "//:core",
     ]
 )
+
+rust_test(
+    name = "nonnull_test",
+    size = "small",
+    srcs = ["nonnull.rs"],
+    edition = "2021",
+    proc_macro_deps = [
+        "//:cxxbridge-macro",
+    ],
+    deps = [
+        ":nonnull_impl",
+        "//:cxx",
+    ],
+)
+
+rust_cxx_bridge(
+    name = "nonnull_bridge",
+    testonly = True,
+    src = "nonnull.rs",
+    hdrs = ["nonnull_tests.h"],
+    deps = [
+        "//:core",
+    ]
+)
+
+cc_library(
+    name = "nonnull_impl",
+    testonly = True,
+    srcs = [
+        "nonnull_tests.cc",
+        ":nonnull_bridge/source",
+    ],
+    hdrs = ["nonnull_tests.h"],
+    linkstatic = True,
+    deps = [
+        ":nonnull_bridge/include",
+        "//:core",
+    ],
+)
