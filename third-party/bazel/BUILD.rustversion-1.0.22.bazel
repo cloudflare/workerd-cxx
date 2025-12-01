@@ -11,7 +11,7 @@ load(
     "cargo_build_script",
     "cargo_toml_env_vars",
 )
-load("@rules_rust//rust:defs.bzl", "rust_library")
+load("@rules_rust//rust:defs.bzl", "rust_proc_macro")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -20,8 +20,8 @@ cargo_toml_env_vars(
     src = "Cargo.toml",
 )
 
-rust_library(
-    name = "serde",
+rust_proc_macro(
+    name = "rustversion",
     srcs = glob(
         include = ["**/*.rs"],
         allow_empty = True,
@@ -48,7 +48,7 @@ rust_library(
     ],
     tags = [
         "cargo-bazel",
-        "crate-name=serde",
+        "crate-name=rustversion",
         "manual",
         "noclippy",
         "norustfmt",
@@ -96,9 +96,9 @@ rust_library(
         "@rules_rust//rust/platform:x86_64-unknown-uefi": [],
         "//conditions:default": ["@platforms//:incompatible"],
     }),
-    version = "1.0.219",
+    version = "1.0.22",
     deps = [
-        "@vendor__serde-1.0.219//:build_script_build",
+        "@vendor__rustversion-1.0.22//:build_script_build",
     ],
 )
 
@@ -122,7 +122,7 @@ cargo_build_script(
         ],
     ),
     crate_name = "build_script_build",
-    crate_root = "build.rs",
+    crate_root = "build/build.rs",
     data = glob(
         include = ["**"],
         allow_empty = True,
@@ -136,7 +136,7 @@ cargo_build_script(
         ],
     ),
     edition = "2018",
-    pkg_name = "serde",
+    pkg_name = "rustversion",
     rustc_env_files = [
         ":cargo_toml_env_vars",
     ],
@@ -145,12 +145,12 @@ cargo_build_script(
     ],
     tags = [
         "cargo-bazel",
-        "crate-name=serde",
+        "crate-name=rustversion",
         "manual",
         "noclippy",
         "norustfmt",
     ],
-    version = "1.0.219",
+    version = "1.0.22",
     visibility = ["//visibility:private"],
 )
 
