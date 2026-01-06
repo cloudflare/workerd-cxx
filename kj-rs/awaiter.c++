@@ -35,7 +35,7 @@ RustPromiseAwaiter::~RustPromiseAwaiter() noexcept(false) {
   unwindDetector.catchExceptionsIfUnwinding([this]() { node = nullptr; });
 }
 
-kj::Maybe<kj::Own<kj::_::Event>> RustPromiseAwaiter::fire() {
+void RustPromiseAwaiter::fire() {
   // Safety: Our Event can only fire on the event loop which was active when our Event base class
   // was constructed. Therefore, we don't need to check that we're on the correct event loop.
 
@@ -55,8 +55,6 @@ kj::Maybe<kj::Own<kj::_::Event>> RustPromiseAwaiter::fire() {
     // nothing here is the right thing regardless: `poll()` will see `isDone() == true` if/when it
     // is eventually called.
   }
-
-  return kj::none;
 }
 
 void RustPromiseAwaiter::traceEvent(kj::_::TraceBuilder& builder) {

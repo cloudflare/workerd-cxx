@@ -1,5 +1,5 @@
 {
-  "lockFileVersion": 18,
+  "lockFileVersion": 24,
   "registryFileHashes": {
     "https://bcr.bazel.build/bazel_registry.json": "8a28e4aff06ee60aed2a8c281907fb8bcbf3b753c91fb5a5c57da3215d5b3497",
     "https://bcr.bazel.build/modules/abseil-cpp/20210324.2/MODULE.bazel": "7cd0312e064fde87c8d1cd79ba06c876bd23630c83466e9500321be55c96ace2",
@@ -157,19 +157,16 @@
   "moduleExtensions": {
     "//:capnp_cpp.bzl%capnp_cpp": {
       "general": {
-        "bzlTransitiveDigest": "qEBGI+2gJxN9bcJ8vJpVWk/XnAY8pV/UqMv9f0/4pfI=",
+        "bzlTransitiveDigest": "Uy+Glzx0K/INgP357RgQ31cAA6cMOgKAnbCa9HrlePw=",
         "usagesDigest": "NcY49Lqyy8czgriyQfqodZtzPlf0EyttkWX8b7osJtY=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
         "envVariables": {},
         "generatedRepoSpecs": {
           "capnp-cpp": {
-            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:http.bzl%http_archive",
+            "repoRuleId": "@@bazel_tools//tools/build_defs/repo:local.bzl%local_repository",
             "attributes": {
-              "url": "https://github.com/capnproto/capnproto/tarball/c525eb1680bdd94f3d814f81f148643ee5086525",
-              "strip_prefix": "capnproto-capnproto-c525eb1/c++",
-              "type": "tgz",
-              "sha256": "7b60e840dbc62bb3140a9dff9ae38253688fc63722dcea6769108e9356e6362b"
+              "path": "/home/maizatskyi/src/github.com/capnproto/capnproto/c++"
             }
           }
         },
@@ -184,7 +181,7 @@
     },
     "@@rules_kotlin+//src/main/starlark/core/repositories:bzlmod_setup.bzl%rules_kotlin_extensions": {
       "general": {
-        "bzlTransitiveDigest": "OlvsB0HsvxbR8ZN+J9Vf00X/+WVz/Y/5Xrq2LgcVfdo=",
+        "bzlTransitiveDigest": "rL/34P1aFDq2GqVC2zCFgQ8nTuOC6ziogocpvG50Qz8=",
         "usagesDigest": "QI2z8ZUR+mqtbwsf2fLqYdJAkPOHdOV+tF2yVAUgRzw=",
         "recordedFileInputs": {},
         "recordedDirentsInputs": {},
@@ -246,5 +243,6 @@
         ]
       }
     }
-  }
+  },
+  "facts": {}
 }

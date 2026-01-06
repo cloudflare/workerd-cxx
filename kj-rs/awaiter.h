@@ -67,7 +67,7 @@ class RustPromiseAwaiter final: public kj::_::Event,
   // -------------------------------------------------------
   // kj::_::Event API
 
-  kj::Maybe<kj::Own<kj::_::Event>> fire() override;
+  void fire() override;
   void traceEvent(kj::_::TraceBuilder& builder) override;
 
   // Helper for FuturePollEvent to report what promise it's waiting on.
@@ -241,10 +241,7 @@ class FutureAwaiter final: public FuturePollEvent {
   }
 
  private:
-  kj::Maybe<kj::Own<kj::_::Event>> fire() override {
-    poll();
-    return kj::none;
-  }
+  void fire() override { poll(); }
 
   // Poll the wrapped Future and arm the event if future is ready.
   void poll() {
