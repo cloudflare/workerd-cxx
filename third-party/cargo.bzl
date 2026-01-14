@@ -1,4 +1,5 @@
 "List of cargo crate dependencies"
+
 load("@rules_rust//crate_universe:defs.bzl", "crate")
 
 PACKAGES = {

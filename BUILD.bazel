@@ -78,8 +78,8 @@ cc_library(
     strip_include_prefix = "include",
     visibility = ["//visibility:public"],
     deps = [
-        "@capnp-cpp//src/kj:kj"
-    ]
+        "@capnp-cpp//src/kj:kj",
+    ],
 )
 
 rust_proc_macro(

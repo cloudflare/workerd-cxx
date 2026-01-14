@@ -19,9 +19,9 @@ rust_test(
     srcs = ["cxx_gen.rs"],
     edition = "2021",
     deps = [
-      ":cxx_test_suite",
-      "//:cxx",
-      "//:cxx-gen",
+        ":cxx_test_suite",
+        "//:cxx",
+        "//:cxx-gen",
     ],
 )
 
@@ -40,15 +40,15 @@ rust_library(
     deps = [
         ":impl",
         "//:cxx",
-        "//kj-rs"
+        "//kj-rs",
     ],
 )
 
 cc_library(
     name = "jsg-mock",
     hdrs = ["ffi/jsg.h"],
-    strip_include_prefix = "ffi",
     include_prefix = "workerd/jsg",
+    strip_include_prefix = "ffi",
 )
 
 cc_library(
@@ -78,18 +78,18 @@ rust_cxx_bridge(
     src = "ffi/lib.rs",
     hdrs = ["ffi/tests.h"],
     deps = [
-        "//:core",
         ":jsg-mock",
         ":module",
-    ]
+        "//:core",
+    ],
 )
 
 rust_unpretty(
     name = "expand",
     testonly = True,
     deps = [
-        ":cxx_test_suite"
-    ]
+        ":cxx_test_suite",
+    ],
 )
 
 rust_cxx_bridge(
@@ -99,5 +99,5 @@ rust_cxx_bridge(
     hdrs = ["ffi/tests.h"],
     deps = [
         "//:core",
-    ]
+    ],
 )
