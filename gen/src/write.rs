@@ -1741,7 +1741,15 @@ fn write_kj_own(out: &mut OutFile, key: NamedImplKey) {
     );
 }
 
-// Writes static assertions for Maybe
+// Writes static assertions for Maybe.
+//
+// This function is only called for Maybe<T> where T is a simple identifier type (e.g., Maybe<Shared>,
+// Maybe<int64_t>). It is NOT called for Maybe<T&> or Maybe<Own<T>>, which are handled via explicit
+// implementations that understand their niche value optimization (null pointer represents None).
+//
+// The sizeof assertion guards against KJ adding niche optimization for value types. We don't check
+// is_reference_v or isOwn here because T is always an identifier type in this context - reference
+// and Own types go through separate code paths that don't call this function.
 fn write_kj_maybe(out: &mut OutFile, key: NamedImplKey) {
     let ident = key.rust;
     let resolve = out.types.resolve(ident);
@@ -1750,6 +1758,7 @@ fn write_kj_maybe(out: &mut OutFile, key: NamedImplKey) {
     out.include.utility = true;
     out.include.kj_rs = true;
     writeln!(out, "static_assert(!::std::is_pointer<{}>::value, \"Maybe<T*> is not allowed in workerd-cxx. Use Maybe<T&> or Maybe<Maybe<T&>> instead.\");", inner);
+    writeln!(out, "static_assert(sizeof(::kj::Maybe<{0}>) != sizeof({0}), \"kj::Maybe<T> has same size as T, which implies niche value optimization, but this is not implemented for this type\");", inner);
 }
 
 // Writes assertions to make sure the internal Own is valid and writes fucntions to support
