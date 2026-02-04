@@ -2,7 +2,7 @@ alias w := watch
 alias b := build
 alias t := test
 
-CLANG_TIDY := "clang-tidy-19"
+CLANG_TIDY := "clang-tidy-20"
 
 watch +WATCH_TARGET='test':
     watchexec -rc -w BUILD.bazel -w tests -w src -w gen -w macro -w syntax -w kj-rs -w include -- just {{WATCH_TARGET}}

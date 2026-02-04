@@ -12,6 +12,14 @@ on:
 permissions:
   contents: read
 
+env:
+  # Adapted from https://github.com/capnproto/capnproto/blob/v2/.github/workflows/quick-test.yml
+  INSTALL_CLANG: |
+    install_clang() {
+      local clang=$1
+      export DEBIAN_FRONTEND=noninteractive && sudo apt-get update && sudo apt-get install --no-upgrade --no-install-recommends -y clang-$clang libc++-$clang-dev libc++abi-$clang-dev libclang-rt-$clang-dev lld-$clang llvm-$clang
+    }
+
 jobs:
   bazel:
     name: Bazel on ${{matrix.os.name}}
@@ -29,8 +37,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup Linux
-        if: matrix.os.name == 'linux'
-        run: sudo apt-get install lld
+        if: startsWith(matrix.os.name, 'linux')
+        run: eval "$INSTALL_CLANG" && install_clang 20
       - name: Setup Windows
         if: matrix.os.name == 'windows'
         run: echo "startup --output_user_root=C:/bzl" > user.bazelrc
@@ -38,7 +46,11 @@ jobs:
         if: matrix.os.name == 'macos'
         run: sudo xcode-select -s "/Applications/Xcode_16.3.app"
       - run: bazel --version
-      - run: bazel test ... --verbose_failures --test_output=errors ${{matrix.os.name == 'macos' && '--xcode_version_config=tools/bazel:github_actions_xcodes' || ''}}
+      - name: test
+        run: |
+            ${{startsWith(matrix.os.name, 'linux') && 'export CC=clang-20' || ''}}
+            ${{startsWith(matrix.os.name, 'linux') && 'export CXX=clang++-20' || ''}}
+            bazel test ... --verbose_failures --test_output=errors ${{matrix.os.name == 'macos' && '--xcode_version_config=tools/bazel:github_actions_xcodes' || ''}}
 
 
   clippy:
@@ -47,8 +59,13 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt-get install lld
-      - run: bazel build --config=clippy ... --verbose_failures
+      - name: Setup Linux
+        run: eval "$INSTALL_CLANG" && install_clang 20
+      - name: build
+        run: |
+            export CC=clang-20
+            export CXX=clang++-20
+            bazel build --config=clippy ... --verbose_failures
 
   asan:
     name: Address Sanitizer
@@ -56,8 +73,13 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt-get install lld
-      - run: bazel test --config=asan ... --verbose_failures --test_output=errors
+      - name: Setup Linux
+        run: eval "$INSTALL_CLANG" && install_clang 20
+      - name: test
+        run: |
+            export CC=clang-20
+            export CXX=clang++-20
+            bazel test --config=asan ... --verbose_failures --test_output=errors
 
   clang-tidy:
     name: Clang Tidy
@@ -65,10 +87,15 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+      - name: Setup Linux
+        run: eval "$INSTALL_CLANG" && install_clang 20
       - name: Install clang-tidy
-        run: sudo apt-get install clang-tidy-19 lld just
+        run: sudo apt-get install clang-tidy-20 just
       - name: Bazel Build
-        run: just build
+        run: |
+            export CC=clang-20
+            export CXX=clang++-20
+            just build
 
       - name: Generate compile.json
         run: just compile-commands
