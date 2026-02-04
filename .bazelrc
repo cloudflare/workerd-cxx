@@ -7,8 +7,9 @@
 
 ## Common configuration
 
-# Bazel 9 forward compatibility. py_binary is still needed for @hedron_compile_commands.
-common --incompatible_autoload_externally=+py_binary
+# Bazel 9 forward compatibility. py_binary and cc_binary are still needed for
+# @hedron_compile_commands.
+common --incompatible_autoload_externally=+py_binary,+cc_binary
 common --incompatible_disable_native_repo_rules
 
 # new versions of stable rust can't be linked with C++ binaries:
