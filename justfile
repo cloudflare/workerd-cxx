@@ -38,7 +38,7 @@ clang-tidy:
 
 compile-commands:
     bazel run @hedron_compile_commands//:refresh_all
-    
+
 # called by rust-analyzer discoverConfig (quiet recipe with no output)
 @_rust-analyzer:
   rm -rf ./rust-project.json

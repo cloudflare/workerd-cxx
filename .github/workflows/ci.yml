@@ -19,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ 
+        os: [
           { name: linux, arch: X64, image: ubuntu-24.04 },
           { name: linux-arm, arch: ARM64, image: ubuntu-24.04-arm },
           { name: macOS, arch: ARM64, image: macos-15 },
