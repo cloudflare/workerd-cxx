@@ -5,18 +5,21 @@ module(
     compatibility_level = 1,
 )
 
-bazel_dep(name = "bazel_features", version = "1.21.0")
-bazel_dep(name = "bazel_skylib", version = "1.7.1")
-bazel_dep(name = "platforms", version = "0.0.11")
-bazel_dep(name = "rules_cc", version = "0.1.1")
+bazel_dep(name = "bazel_features", version = "1.42.1")
+bazel_dep(name = "bazel_skylib", version = "1.8.2")
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "rules_cc", version = "0.2.17")
 bazel_dep(name = "apple_support", version = "2.1.0")
-bazel_dep(name = "rules_rust", version = "0.65.0")
+bazel_dep(name = "rules_rs", version = "0.0.40")
 bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
 
 cc_configure = use_extension("@rules_cc//cc:extensions.bzl", "cc_configure_extension")
 use_repo(cc_configure, "local_config_cc")
 
-rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
+rules_rust = use_extension("@rules_rs//rs/experimental:rules_rust.bzl", "rules_rust")
+use_repo(rules_rust, "rules_rust")
+
+rust = use_extension("@rules_rs//rs/experimental:rules_rust_reexported_extensions.bzl", "rust")
 
 # new versions of stable rust can't be linked with C++ binaries:
 # <https://github.com/bazelbuild/rules_rust/issues/3459>
@@ -25,8 +28,20 @@ use_repo(rust, "rust_toolchains")
 
 register_toolchains("@rust_toolchains//:all")
 
-crate_repositories = use_extension("//tools/bazel:extension.bzl", "crate_repositories")
-use_repo(crate_repositories, "crates.io", "vendor")
+crate = use_extension("@rules_rs//rs:extensions.bzl", "crate")
+crate.from_cargo(
+    name = "crates.io",
+    cargo_lock = "//third-party:Cargo.lock",
+    cargo_toml = "//third-party:Cargo.toml",
+    platform_triples = [
+        "x86_64-apple-darwin",
+        "aarch64-apple-darwin",
+        "x86_64-unknown-linux-gnu",
+        "aarch64-unknown-linux-gnu",
+        "x86_64-pc-windows-msvc",
+    ],
+)
+use_repo(crate, "crates.io")
 
 ## KJ-RS
 
