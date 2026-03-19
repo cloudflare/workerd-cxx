@@ -5,22 +5,24 @@ module(
     compatibility_level = 1,
 )
 
-bazel_dep(name = "bazel_features", version = "1.21.0")
-bazel_dep(name = "bazel_skylib", version = "1.7.1")
-bazel_dep(name = "platforms", version = "0.0.11")
-bazel_dep(name = "rules_cc", version = "0.1.1")
+bazel_dep(name = "bazel_features", version = "1.42.1")
+bazel_dep(name = "bazel_skylib", version = "1.9.0")
+bazel_dep(name = "platforms", version = "1.0.0")
+bazel_dep(name = "rules_cc", version = "0.2.17")
 bazel_dep(name = "apple_support", version = "2.1.0")
-bazel_dep(name = "rules_rust", version = "0.65.0")
-bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
+bazel_dep(name = "rules_rust", version = "0.69.0")
 
 cc_configure = use_extension("@rules_cc//cc:extensions.bzl", "cc_configure_extension")
 use_repo(cc_configure, "local_config_cc")
 
 rust = use_extension("@rules_rust//rust:extensions.bzl", "rust")
-
-# new versions of stable rust can't be linked with C++ binaries:
-# <https://github.com/bazelbuild/rules_rust/issues/3459>
-rust.toolchain(versions = ["nightly/2025-09-18"])
+rust.toolchain(
+    allocator_library = "@rules_rust//ffi/rs:empty",
+    versions = [
+        "1.91.1",
+        "nightly/2026-02-12",
+    ],
+)
 use_repo(rust, "rust_toolchains")
 
 register_toolchains("@rust_toolchains//:all")

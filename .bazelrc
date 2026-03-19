@@ -12,11 +12,6 @@
 common --incompatible_autoload_externally=+py_binary,+cc_binary
 common --incompatible_disable_native_repo_rules
 
-# new versions of stable rust can't be linked with C++ binaries:
-# <https://github.com/bazelbuild/rules_rust/issues/3459>
-build --@rules_rust//rust/toolchain/channel=nightly
-build --@rules_rust//rust/settings:experimental_use_allocator_libraries_with_mangled_symbols
-
 ## Platform specific settings
 
 build --enable_platform_specific_config
