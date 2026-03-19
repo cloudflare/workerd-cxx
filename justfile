@@ -23,7 +23,7 @@ expand:
     bazel build //kj-rs/tests:expand-rust_test
 
 cargo-update:
-    bazel run //third-party:vendor
+    cargo update --manifest-path third-party/Cargo.toml
 
 format: rustfmt clang-format
 
