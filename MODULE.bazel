@@ -2,7 +2,6 @@ module(
     name = "workerd-cxx",
     version = "0.0.0",
     bazel_compatibility = [">=7.2.1"],
-    compatibility_level = 1,
 )
 
 bazel_dep(name = "bazel_features", version = "1.42.1")
@@ -10,7 +9,7 @@ bazel_dep(name = "bazel_skylib", version = "1.9.0")
 bazel_dep(name = "platforms", version = "1.0.0")
 bazel_dep(name = "rules_cc", version = "0.2.17")
 bazel_dep(name = "apple_support", version = "2.1.0")
-bazel_dep(name = "rules_rust", version = "0.69.0")
+bazel_dep(name = "rules_rust", version = "0.70.0")
 
 cc_configure = use_extension("@rules_cc//cc:extensions.bzl", "cc_configure_extension")
 use_repo(cc_configure, "local_config_cc")
@@ -33,7 +32,6 @@ crate.from_cargo(
     cargo_lockfile = "//third-party:Cargo.lock",
     manifests = ["//third-party:Cargo.toml"],
     strip_internal_dependencies_from_cargo_lockfile = True,
-    # cargo_config = "//third-party:Cargo.toml",
     supported_platform_triples = [
         "x86_64-apple-darwin",
         "aarch64-apple-darwin",
