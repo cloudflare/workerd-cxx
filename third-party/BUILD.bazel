@@ -1,18 +1,6 @@
 load("@bazel_skylib//rules:write_file.bzl", "write_file")
 load("@rules_cc//cc:cc_library.bzl", "cc_library")
-load("@rules_rust//crate_universe:defs.bzl", "crates_vendor")
 load("@rules_rust//rust:defs.bzl", "rust_static_library")
-load("//third-party:cargo.bzl", "PACKAGES")
-
-crates_vendor(
-    name = "vendor",
-    cargo_lockfile = "//third-party:Cargo.lock",
-    generate_build_scripts = True,
-    mode = "remote",
-    packages = PACKAGES,
-    tags = ["manual"],
-    vendor_path = "bazel",
-)
 
 # Windows build fixes due to rust libraries missing symbols:
 # https://github.com/bazelbuild/rules_rust/blob/144d34fd/ffi/cc/global_allocator_library/BUILD.bazel#L3
