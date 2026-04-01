@@ -120,6 +120,22 @@ cc_library(
 )
 
 cc_test(
+    name = "linked-group-test",
+    size = "small",
+    srcs = [
+        "linked-group-test.c++",
+    ],
+    linkstatic = select({
+        "@platforms//os:windows": True,
+        "//conditions:default": False,
+    }),
+    deps = [
+        "//kj-rs",
+        "@capnp-cpp//src/kj:kj-test",
+    ],
+)
+
+cc_test(
     name = "awaitables-cc-test",
     size = "medium",
     srcs = [

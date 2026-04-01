@@ -240,6 +240,16 @@ class LinkedObject {
     }
   }
 
+  kj::Maybe<const G&> tryGetGroup() const {
+    KJ_IF_SOME(group, maybeGroup) {
+      KJ_IREQUIRE(link.isLinked());
+      return static_cast<const G&>(group);
+    } else {
+      KJ_IREQUIRE(!link.isLinked());
+      return kj::none;
+    }
+  }
+
   void invalidateGroup() {
     KJ_IF_SOME(group, maybeGroup) {
       removeFromGroup(group);
