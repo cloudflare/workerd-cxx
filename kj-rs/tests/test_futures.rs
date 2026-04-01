@@ -224,8 +224,7 @@ pub async fn new_error_handling_future_void_infallible() {
     assert!(err.what().contains("test error"));
 }
 
-// TODO(now): Rename to new_promise_i32_awaiting_future_void
-pub async fn new_awaiting_future_i32() -> Result<()> {
+pub async fn new_promise_i32_awaiting_future_void() -> Result<()> {
     let value = crate::ffi::new_ready_promise_i32(123)
         .await
         .expect("should not throw");

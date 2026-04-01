@@ -149,7 +149,7 @@ KJ_TEST("Rust can await Promise<int32_t>") {
   kj::EventLoop loop;
   kj::WaitScope waitScope(loop);
 
-  []() -> kj::Promise<void> { co_await new_awaiting_future_i32(); }().wait(waitScope);
+  []() -> kj::Promise<void> { co_await new_promise_i32_awaiting_future_void(); }().wait(waitScope);
 }
 
 KJ_TEST("C++ can await BoxFuture<i32>") {
