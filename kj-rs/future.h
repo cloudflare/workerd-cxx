@@ -74,6 +74,9 @@ using DropCallback = void (*)(void /* RustFuture::fut */* fut);
 
 // ::kj_rs::repr::RustFuture & ::kj_rs::promise::RustInfallibleFuture since they both have the
 // same layout.
+//
+// Cancellation: Destroying the enclosing FutureAwaiter calls this struct's `drop` function pointer,
+// which drops the Rust Future and transitively cancels any KJ sub-promises it was .await'ing.
 struct RustFuture {
 
   template <typename T>

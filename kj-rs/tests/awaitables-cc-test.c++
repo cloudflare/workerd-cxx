@@ -6,6 +6,7 @@
 #include "kj-rs/future.h"
 #include "kj-rs/tests/lib.rs.h"
 #include "kj-rs/waker.h"
+
 #include <sys/types.h>
 
 #include <kj/test.h>
@@ -183,8 +184,89 @@ KJ_TEST("Work before poll") {
 
 // TODO(now): More test cases.
 //   - Standalone ArcWaker tests. Ensure Rust calls ArcWaker destructor when we expect.
-//   - Ensure Rust calls PromiseNode destructor from LazyRustPromiseAwaiter.
 //   - Throwing an exception from PromiseNode functions, including destructor.
+
+// =======================================================================================
+// Cancellation tests
+//
+// In both KJ and Rust, dropping a promise/future synchronously cancels the underlying work. These
+// tests verify that cancellation propagates correctly across the Rust/C++ async FFI boundary using
+// a "cancellation-detecting promise" that increments a counter when destroyed.
+
+KJ_TEST("Cancellation: drop never-polled Rust future") {
+  // Dropping a kj::Promise wrapping a Rust future that was never polled should not crash. Since the
+  // future was never polled, the Rust async function body was never entered, so no sub-promises
+  // exist to cancel.
+  kj::EventLoop loop;
+  kj::WaitScope waitScope(loop);
+
+  { auto promise = new_future_awaiting_cancellable_promise(); }
+}
+
+KJ_TEST("Cancellation: C++ dropping promise cancels Rust future's awaited KJ promise") {
+  // When C++ drops a kj::Promise wrapping a Rust future that is currently .awaiting a KJ promise,
+  // the cancellation should propagate through the Rust future to the inner KJ promise.
+  kj::EventLoop loop;
+  kj::WaitScope waitScope(loop);
+
+  reset_cancellation_counter();
+
+  {
+    auto promise = new_future_awaiting_cancellable_promise();
+    // Poll once to enter the Rust async function and suspend at the .await.
+    KJ_EXPECT(!promise.poll(waitScope));
+    KJ_EXPECT(get_cancellation_counter() == 0);
+  }
+
+  KJ_EXPECT(get_cancellation_counter() == 1);
+}
+
+KJ_TEST("Cancellation: propagates to current .await point in multi-step Rust future") {
+  // A Rust future that has completed one .await and is suspended at a second should only cancel the
+  // second sub-promise. The first has already completed and been consumed.
+  kj::EventLoop loop;
+  kj::WaitScope waitScope(loop);
+
+  reset_cancellation_counter();
+
+  {
+    auto promise = new_two_step_cancellable_future();
+    // Poll until the first step (coroutine promise) completes and the future suspends at the
+    // second step (cancellation-detecting promise).
+    KJ_EXPECT(!promise.poll(waitScope));
+    KJ_EXPECT(get_cancellation_counter() == 0);
+  }
+
+  KJ_EXPECT(get_cancellation_counter() == 1);
+}
+
+KJ_TEST("Cancellation: Rust select cancels losing branch's KJ promise") {
+  // When a Rust select() resolves one branch, the other branch is dropped, which should cancel its
+  // KJ promise. This tests Rust-internal cancellation propagating to KJ promises.
+  kj::EventLoop loop;
+  kj::WaitScope waitScope(loop);
+
+  reset_cancellation_counter();
+
+  []() -> kj::Promise<void> { co_await new_select_with_cancellation(); }().wait(waitScope);
+
+  // The coroutine promise won the select, so the cancellation-detecting promise was dropped.
+  KJ_EXPECT(get_cancellation_counter() == 1);
+}
+
+KJ_TEST("Cancellation: Rust dropping never-polled KJ promise future") {
+  // When Rust creates a PromiseFuture (by calling a C++ async fn) but drops it without ever
+  // polling, the OwnPromiseNode is dropped directly by Rust, cancelling the KJ promise.
+  kj::EventLoop loop;
+  kj::WaitScope waitScope(loop);
+
+  reset_cancellation_counter();
+
+  []() -> kj::Promise<void> { co_await new_drop_cancellable_promise_without_polling(); }().wait(
+           waitScope);
+
+  KJ_EXPECT(get_cancellation_counter() == 1);
+}
 
 }  // namespace
 }  // namespace kj_rs_demo

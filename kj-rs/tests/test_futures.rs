@@ -236,3 +236,55 @@ pub async fn new_awaiting_future_i32() -> Result<()> {
 pub async fn new_ready_future_i32(value: i32) -> Result<i32> {
     Ok(value)
 }
+
+// =======================================================================================
+// Cancellation test helpers
+//
+// These functions help verify that cancellation propagates correctly across the Rust/C++ async FFI
+// boundary. The C++ side provides a "cancellation-detecting promise" which never resolves but
+// increments a counter when it is destroyed (i.e., cancelled). These Rust async functions consume
+// that promise in various ways so that the C++ test driver can verify cancellation occurred.
+
+/// Awaits a cancellation-detecting KJ promise. When this future is cancelled by dropping the
+/// enclosing `kj::Promise<T>` on the C++ side, the inner KJ promise is also cancelled, which
+/// increments the cancellation counter.
+pub async fn new_future_awaiting_cancellable_promise() -> Result<()> {
+    crate::ffi::new_cancellation_detecting_promise_void()
+        .await
+        .map_err(Error::other)?;
+    Ok(())
+}
+
+/// Two-step future: the first step completes normally, and the second step awaits a
+/// cancellation-detecting promise that never resolves. After one poll, the future will have
+/// advanced past step 1 and be suspended at step 2.
+pub async fn new_two_step_cancellable_future() -> Result<()> {
+    crate::ffi::new_coroutine_promise_void()
+        .await
+        .map_err(Error::other)?;
+    crate::ffi::new_cancellation_detecting_promise_void()
+        .await
+        .map_err(Error::other)?;
+    Ok(())
+}
+
+/// Races a coroutine promise (which resolves) against a cancellation-detecting promise (which never
+/// resolves) using `naive_select`. When the coroutine wins, the cancellation-detecting promise is
+/// dropped, verifying that Rust-internal cancellation propagates to sub-KJ promises.
+pub async fn new_select_with_cancellation() -> Result<()> {
+    naive_select(
+        crate::ffi::new_coroutine_promise_void().into_future(),
+        crate::ffi::new_cancellation_detecting_promise_void().into_future(),
+    )
+    .await
+    .map_err(Error::other)
+}
+
+/// Creates a cancellation-detecting promise future and immediately drops it without ever polling it.
+/// This verifies that Rust's `OwnPromiseNode::drop()` correctly cancels the underlying KJ promise
+/// even when no `RustPromiseAwaiter` was constructed.
+pub async fn new_drop_cancellable_promise_without_polling() -> Result<()> {
+    let _future = crate::ffi::new_cancellation_detecting_promise_void();
+    // _future is dropped here without being .awaited
+    Ok(())
+}

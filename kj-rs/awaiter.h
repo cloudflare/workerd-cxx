@@ -51,6 +51,10 @@ struct OptionWaker;
 // records the fact that we are done, then wakes our Waker or arms the FuturePollEvent, if we
 // have one. We access the FuturePollEvent via our LinkedObject base class mixin. It gives us the
 // ability to store a weak reference to the FuturePollEvent, if we were last polled by one.
+//
+// Cancellation: Dropping the RustPromiseAwaiter destroys its OwnPromiseNode, cancelling the
+// wrapped KJ promise. If the RustPromiseAwaiter was never constructed, Rust's OwnPromiseNode::drop()
+// cancels the promise directly.
 class RustPromiseAwaiter final: public kj::_::Event,
                                 public LinkedObject<FuturePollEvent, RustPromiseAwaiter> {
  public:
@@ -209,6 +213,9 @@ concept Future = requires(F f) {
 // syntax. It wraps a Future and captures a reference to its enclosing KJ coroutine, arranging
 // to continuously call `Future::poll()` on the KJ event loop until the Future produces a
 // result, after which it arms the enclosing KJ coroutine's Event.
+//
+// Cancellation: Destroying the FutureAwaiter drops the Rust Future, which transitively drops
+// any sub-Futures and their OwnPromiseNodes, cancelling the corresponding KJ sub-promises.
 template <Future F>
 class FutureAwaiter final: public FuturePollEvent {
  public:
