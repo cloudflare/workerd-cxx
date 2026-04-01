@@ -50,4 +50,17 @@ kj::Promise<void> new_cancellation_detecting_promise_void() {
   return kj::Promise<void>(kj::NEVER_DONE).attach(kj::defer([]() { ++cancellationCounter; }));
 }
 
+kj::Maybe<kj::Own<kj::PromiseFulfiller<void>>> storedFulfiller;
+
+kj::Promise<void> new_fulfillable_promise_void() {
+  auto paf = kj::newPromiseAndFulfiller<void>();
+  storedFulfiller = kj::mv(paf.fulfiller);
+  return kj::mv(paf.promise);
+}
+
+void fulfill_stored_promise() {
+  KJ_ASSERT_NONNULL(storedFulfiller)->fulfill();
+  storedFulfiller = kj::none;
+}
+
 }  // namespace kj_rs_demo

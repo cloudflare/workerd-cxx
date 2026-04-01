@@ -279,6 +279,59 @@ pub async fn new_select_with_cancellation() -> Result<()> {
     .map_err(Error::other)
 }
 
+// =======================================================================================
+// NaughtyFuture test helpers
+//
+// These helpers test that a RustPromiseAwaiter can survive the death of the FuturePollEvent that
+// first polled it, and be correctly re-linked to a new FuturePollEvent by a subsequent poll.
+//
+// The pattern: phase 1 (poll_and_stash_promise_future) creates a PromiseFuture for a manually
+// fulfillable KJ promise, polls it once under a KJ coroutine (linking the RustPromiseAwaiter to
+// that coroutine's FuturePollEvent), then stashes the future in a thread_local. Phase 2
+// (unstash_and_await_promise_future) retrieves it and awaits it under a different coroutine.
+//
+// We use a thread_local because we can't easily return the PromiseFuture to C++ through the FFI --
+// it's a Rust trait object (dyn Future) with no CXX-compatible representation. The C++ side uses a
+// file-scope variable for the fulfiller for similar reasons (kj::PromiseFulfiller has no CXX bridge
+// representation).
+
+use std::cell::RefCell;
+
+type StashedFuture = Pin<Box<dyn Future<Output = std::result::Result<(), cxx::KjException>>>>;
+
+thread_local! {
+    static STASHED_FUTURE: RefCell<Option<StashedFuture>> = const { RefCell::new(None) };
+}
+
+/// Phase 1: Create a `PromiseFuture` for a fulfillable KJ promise, poll it once (creating the
+/// `RustPromiseAwaiter` and linking it to the current `FuturePollEvent`), then stash it.
+pub async fn poll_and_stash_promise_future() -> Result<()> {
+    let mut future: StashedFuture =
+        Box::pin(crate::ffi::new_fulfillable_promise_void().into_future());
+
+    // Poll once to initialize the RustPromiseAwaiter and link it to our FuturePollEvent.
+    let is_ready = std::future::poll_fn(|cx| match future.as_mut().poll(cx) {
+        Poll::Pending => Poll::Ready(false),
+        Poll::Ready(_) => Poll::Ready(true),
+    })
+    .await;
+
+    assert!(!is_ready, "expected the fulfillable promise to be pending");
+
+    STASHED_FUTURE.with(|f| {
+        *f.borrow_mut() = Some(future);
+    });
+
+    Ok(())
+}
+
+/// Phase 2: Retrieve the stashed future and await it to completion under a new `FuturePollEvent`.
+pub async fn unstash_and_await_promise_future() -> Result<()> {
+    let future = STASHED_FUTURE.with(|f| f.borrow_mut().take().expect("no stashed future"));
+    future.await.map_err(Error::other)?;
+    Ok(())
+}
+
 /// Creates a cancellation-detecting promise future and immediately drops it without ever polling it.
 /// This verifies that Rust's `OwnPromiseNode::drop()` correctly cancels the underlying KJ promise
 /// even when no `RustPromiseAwaiter` was constructed.

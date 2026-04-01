@@ -24,4 +24,9 @@ void reset_cancellation_counter();
 uint64_t get_cancellation_counter();
 kj::Promise<void> new_cancellation_detecting_promise_void();
 
+// Manually fulfillable promise helpers. new_fulfillable_promise_void() stores a fulfiller and
+// returns a promise; fulfill_stored_promise() fulfills it.
+kj::Promise<void> new_fulfillable_promise_void();
+void fulfill_stored_promise();
+
 }  // namespace kj_rs_demo

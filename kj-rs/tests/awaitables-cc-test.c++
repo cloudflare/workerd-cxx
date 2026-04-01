@@ -79,20 +79,46 @@ KJ_TEST("RustPromiseAwaiter: Rust can poll() multiple promises under a single "
   []() -> kj::Promise<void> { co_await new_naive_select_future_void(); }().wait(waitScope);
 }
 
-// TODO(now): Similar to "Rust can poll() multiple promises ...", but poll() until all are ready.
+// TODO(someday): Similar to "Rust can poll() multiple promises ...", but poll() until all are ready.
 
-// TODO(now): Test polling a Promise from Rust with multiple LazyArcWakers.
-//   Need a function which:
-//   - Creates an OwnPromiseNode which is fulfilled manually.
-//   - Wraps OwnPromiseNode::into_future() in BoxFuture.
-//   - Passes the BoxFuture to a new KJ coroutine.
-//   - The KJ coroutine passes the BoxFuture to a Rust function returning NaughtyFuture.
-//   - The coroutine co_awaits the NaughtyFuture.
-//   - The NaughtyFuture polls the BoxFuture once and returns Ready(BoxFuture).
-//   - The coroutine co_returns the BoxFuture to the local function here.
-//   - The BoxFuture has now outlived the coroutine which polled it last.
-//   - Fulfill the OwnPromiseNode. Should not segfault.
-//   - Pass the OwnPromiseNode to a new Rust Future somehow, .await it.
+KJ_TEST("RustPromiseAwaiter: PromiseFuture survives coroutine death and re-links") {
+  // A PromiseFuture (containing a RustPromiseAwaiter) is polled under coroutine A, linking the
+  // RustPromiseAwaiter to A's FuturePollEvent. Coroutine A completes and is destroyed, severing
+  // the link. The promise is fulfilled, then coroutine B polls the same PromiseFuture. The
+  // RustPromiseAwaiter re-links to B's FuturePollEvent before fire() runs (because coroutine B's
+  // initial poll is synchronous), so fire() arms B's FuturePollEvent normally.
+  kj::EventLoop loop;
+  kj::WaitScope waitScope(loop);
+
+  // Phase 1: coroutine A polls the fulfillable promise once, stashes the PromiseFuture.
+  []() -> kj::Promise<void> { co_await poll_and_stash_promise_future(); }().wait(waitScope);
+  // Coroutine A and its FuturePollEvent are now destroyed.
+
+  // Fulfill the promise. The RustPromiseAwaiter's fire() event is armed but hasn't run yet.
+  fulfill_stored_promise();
+
+  // Phase 2: coroutine B retrieves the stashed PromiseFuture and awaits it. B's initial poll
+  // re-links the RustPromiseAwaiter to B's FuturePollEvent before the event loop turns.
+  []() -> kj::Promise<void> { co_await unstash_and_await_promise_future(); }().wait(waitScope);
+}
+
+KJ_TEST("RustPromiseAwaiter: PromiseFuture survives coroutine death, fire() with no waker") {
+  // Same scenario as above, but the event loop turns between fulfill and coroutine B, so fire()
+  // runs while the RustPromiseAwaiter has no linked FuturePollEvent and an empty OptionWaker.
+  // fire()'s wake_if_some() handles this gracefully; the KJ_DEFER sets maybeOptionWaker to
+  // kj::none, so coroutine B's poll() sees the promise is ready.
+  kj::EventLoop loop;
+  kj::WaitScope waitScope(loop);
+
+  []() -> kj::Promise<void> { co_await poll_and_stash_promise_future(); }().wait(waitScope);
+
+  fulfill_stored_promise();
+
+  // Force the event loop to turn, processing fire() before coroutine B polls.
+  kj::evalLater([]() {}).wait(waitScope);
+
+  []() -> kj::Promise<void> { co_await unstash_and_await_promise_future(); }().wait(waitScope);
+}
 
 KJ_TEST("RustPromiseAwaiter: Rust can poll() KJ promises with non-KJ Wakers") {
   kj::EventLoop loop;

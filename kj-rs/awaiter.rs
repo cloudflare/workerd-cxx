@@ -129,13 +129,15 @@ impl OptionWaker {
         self.inner = None;
     }
 
-    pub fn wake_mut(&mut self) {
-        self.inner
-            .take()
-            .expect(
-                "OptionWaker::set() should be called before RustPromiseAwaiter::poll(); \
-                OptionWaker::wake() should be called at most once after poll()",
-            )
-            .wake();
+    /// Wake the stored Waker, if any. Does nothing if the inner Waker is None.
+    ///
+    /// The `OptionWaker` may be empty when `RustPromiseAwaiter::fire()` runs after `poll()` took the
+    /// optimized path (which clears the `OptionWaker` and links to a `FuturePollEvent` instead) but
+    /// the `FuturePollEvent` was destroyed before the promise fired. In that case there is nothing to
+    /// wake; the owner's next `poll()` will discover the promise is ready.
+    pub fn wake_if_some(&mut self) {
+        if let Some(waker) = self.inner.take() {
+            waker.wake();
+        }
     }
 }

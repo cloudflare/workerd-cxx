@@ -43,17 +43,23 @@ kj::Maybe<kj::Own<kj::_::Event>> RustPromiseAwaiter::fire() {
   KJ_DEFER(maybeOptionWaker = kj::none);
 
   KJ_IF_SOME(futurePollEvent, linkedGroup().tryGet()) {
+    // Optimized path: we're still linked to a FuturePollEvent. Arm it directly.
     futurePollEvent.armDepthFirst();
     linkedGroup().set(kj::none);
   } else KJ_IF_SOME(optionWaker, maybeOptionWaker) {
-    // This call to `optionWaker.wake()` consumes OptionWaker's inner Waker. If we call it more than
-    // once, it will panic. Fortunately, we only call it once.
-    optionWaker.wake_mut();
+    // We use wake_if_some() rather than an unconditional wake because the OptionWaker may be empty. This
+    // happens when poll() took the optimized path (clearing the OptionWaker and linking to a
+    // FuturePollEvent instead), but the FuturePollEvent was destroyed before our Promise fired.
+    // In that case there's nothing to wake; KJ_DEFER above will set maybeOptionWaker = kj::none,
+    // so our owner's next poll() will see that and return true.
+    //
+    // When the OptionWaker IS populated (the unoptimized path stored a cloned Waker), this wakes
+    // it normally.
+    optionWaker.wake_if_some();
   } else {
-    // We were constructed, and our Event even fired, but our owner still didn't `poll()` us yet.
-    // This is currently an unlikely case given how the rest of the code is written, but doing
-    // nothing here is the right thing regardless: `poll()` will see `isDone() == true` if/when it
-    // is eventually called.
+    // maybeOptionWaker is already kj::none, meaning fire() was already called (it's set by
+    // KJ_DEFER above). This shouldn't happen since KJ Events fire at most once, but doing nothing
+    // is safe: poll() will see maybeOptionWaker == kj::none and return true.
   }
 
   return kj::none;
@@ -94,8 +100,12 @@ bool RustPromiseAwaiter::poll(const WakerRef& waker, const KjWaker* maybeKjWaker
         // `co_await` expression somewhere up the stack from us. We can arrange to arm the
         // `co_await` expression's KJ Event directly when our Promise is ready.
 
-        // If we had an opaque Waker stored in OptionWaker before, drop it now, as we won't be
-        // needing it.
+        // Drop any Waker stored in OptionWaker. We'll use the LinkedGroup to wake instead.
+        //
+        // Note: this leaves OptionWaker empty while maybeOptionWaker is still Some(ref). If the
+        // FuturePollEvent is later destroyed (severing the LinkedGroup link) before our Promise
+        // fires, fire() will find no LinkedGroup AND an empty OptionWaker. fire() handles this
+        // via wake_if_some(), which is a no-op on an empty OptionWaker.
         optionWaker.set_none();
 
         // Store a reference to the current `co_await` expression's Future polling Event. The
