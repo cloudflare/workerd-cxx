@@ -22,7 +22,7 @@ rust_library(
         ":test-date",
         ":test-promises",
         ":test-maybe",
-        # TODO(now): Why isn't :cxx transitive?
+        # TODO(cleanup): Why isn't :cxx transitive?
         "@workerd-cxx//:cxx",
         "//kj-rs",
     ],

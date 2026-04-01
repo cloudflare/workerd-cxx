@@ -1,6 +1,3 @@
-// TODO(now): Make this a library, drive test from Rust.
-// TODO(now): Move as many cases as possible into kj-rs.
-
 #include "kj-rs-demo/test-promises.h"
 #include "kj-rs/awaiter.h"
 #include "kj-rs/future.h"
@@ -182,7 +179,7 @@ KJ_TEST("Work before poll") {
   KJ_EXPECT(val == 42);
 }
 
-// TODO(now): More test cases.
+// TODO(someday): More test cases.
 //   - Standalone ArcWaker tests. Ensure Rust calls ArcWaker destructor when we expect.
 //   - Throwing an exception from PromiseNode functions, including destructor.
 

@@ -63,7 +63,7 @@ void RustPromiseAwaiter::traceEvent(kj::_::TraceBuilder& builder) {
   if (node.get() != nullptr) {
     node->tracePromise(builder, true);
   }
-  // TODO(now): Can we add an entry for the `.await` expression in Rust here?
+  // TODO(someday): Can we add an entry for the `.await` expression in Rust here?
   KJ_IF_SOME(futurePollEvent, linkedGroup().tryGet()) {
     futurePollEvent.traceEvent(builder);
   }
@@ -75,7 +75,7 @@ void RustPromiseAwaiter::tracePromise(kj::_::TraceBuilder& builder, bool stopAtN
   if (node.get() != nullptr) {
     node->tracePromise(builder, stopAtNextEvent);
   }
-  // TODO(now): Can we add an entry for the `.await` expression in Rust here?
+  // TODO(someday): Can we add an entry for the `.await` expression in Rust here?
 }
 
 bool RustPromiseAwaiter::poll(const WakerRef& waker, const KjWaker* maybeKjWaker) {

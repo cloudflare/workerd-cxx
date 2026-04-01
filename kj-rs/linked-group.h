@@ -56,7 +56,7 @@ namespace kj_rs {
 //     over the list. Removing an Object in any other position in the list will invalidate all
 //     existing iterators.
 //
-// TODO(now): Tests. Multiple inheritance if an object must join multiple groups, or a group must
+// TODO(someday): Multiple inheritance if an object must join multiple groups, or a group must
 //   have multiple linked object types? Can we write something like `linkedGroup<G>()` in the
 //   LinkedObject derived class, and `linkedObjects<O>()` in the LinkedGro8up derived class?
 //   - Test: Order in which LinkedObjects are added.
