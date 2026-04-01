@@ -69,7 +69,7 @@ struct Result final {
       });
       // throw copies the object to a temporary location,
       // do not copy to stack to be just copied elsewhere: throw "from the heap".
-      throw *e;
+      throw kj::mv(*e);
     }
   }
 
