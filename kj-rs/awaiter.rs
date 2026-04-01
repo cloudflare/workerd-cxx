@@ -80,7 +80,9 @@ impl<Data: std::marker::Unpin> PromiseAwaiter<Data> {
     pub fn poll(mut self: Pin<&mut Self>, cx: &mut Context) -> bool {
         let maybe_kj_waker = try_into_kj_waker_ptr(cx.waker());
         let awaiter = self.as_mut().get_awaiter();
-        // TODO(now): Safety comment.
+        // Safety: The awaiter is initialized by `get_awaiter()` above. `WakerRef` borrows the
+        // context's waker, which is alive for the duration of the call. `maybe_kj_waker` is null
+        // or points to the KjWaker inside the waker (validated by `try_into_kj_waker_ptr`).
         unsafe { awaiter.poll(&WakerRef(cx.waker()), maybe_kj_waker) }
     }
 }

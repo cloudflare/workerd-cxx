@@ -1,5 +1,5 @@
-use ::cxx::core::mem::MaybeUninit;
 use cxx::ExternType;
+use cxx::core::mem::MaybeUninit;
 
 use crate::PromiseAwaiter;
 
@@ -79,11 +79,13 @@ impl<P: KjPromise> PromiseFuture<P> {
 impl<P: KjPromise> Future for PromiseFuture<P> {
     type Output = CxxResult<P::Output>;
     fn poll(self: Pin<&mut Self>, cx: &mut Context) -> Poll<Self::Output> {
-        // TODO(now): Safety comment.
+        // Safety: `awaiter` is structurally pinned within `PromiseFuture` -- it is never moved
+        // after pinning, and `PromiseFuture` has no `Drop` impl that could move it.
         let mut awaiter = unsafe { self.map_unchecked_mut(|s| &mut s.awaiter) };
         if awaiter.as_mut().poll(cx) {
             let node = awaiter.as_mut().get_awaiter().take_own_promise_node();
-            // TODO(now): Safety comment.
+            // Safety: `node` was created by `P::into_own_promise_node()` in `PromiseFuture::new()`,
+            // and the promise is resolved (poll returned true).
             let value = unsafe { P::unwrap(node, &awaiter.data) };
             Poll::Ready(value)
         } else {
