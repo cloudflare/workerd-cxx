@@ -224,8 +224,7 @@ pub async fn new_error_handling_future_void_infallible() {
     assert!(err.what().contains("test error"));
 }
 
-// TODO(now): Rename to new_promise_i32_awaiting_future_void
-pub async fn new_awaiting_future_i32() -> Result<()> {
+pub async fn new_promise_i32_awaiting_future_void() -> Result<()> {
     let value = crate::ffi::new_ready_promise_i32(123)
         .await
         .expect("should not throw");
@@ -235,4 +234,109 @@ pub async fn new_awaiting_future_i32() -> Result<()> {
 
 pub async fn new_ready_future_i32(value: i32) -> Result<i32> {
     Ok(value)
+}
+
+// =======================================================================================
+// Cancellation test helpers
+//
+// These functions help verify that cancellation propagates correctly across the Rust/C++ async FFI
+// boundary. The C++ side provides a "cancellation-detecting promise" which never resolves but
+// increments a counter when it is destroyed (i.e., cancelled). These Rust async functions consume
+// that promise in various ways so that the C++ test driver can verify cancellation occurred.
+
+/// Awaits a cancellation-detecting KJ promise. When this future is cancelled by dropping the
+/// enclosing `kj::Promise<T>` on the C++ side, the inner KJ promise is also cancelled, which
+/// increments the cancellation counter.
+pub async fn new_future_awaiting_cancellable_promise() -> Result<()> {
+    crate::ffi::new_cancellation_detecting_promise_void()
+        .await
+        .map_err(Error::other)?;
+    Ok(())
+}
+
+/// Two-step future: the first step completes normally, and the second step awaits a
+/// cancellation-detecting promise that never resolves. After one poll, the future will have
+/// advanced past step 1 and be suspended at step 2.
+pub async fn new_two_step_cancellable_future() -> Result<()> {
+    crate::ffi::new_coroutine_promise_void()
+        .await
+        .map_err(Error::other)?;
+    crate::ffi::new_cancellation_detecting_promise_void()
+        .await
+        .map_err(Error::other)?;
+    Ok(())
+}
+
+/// Races a coroutine promise (which resolves) against a cancellation-detecting promise (which never
+/// resolves) using `naive_select`. When the coroutine wins, the cancellation-detecting promise is
+/// dropped, verifying that Rust-internal cancellation propagates to sub-KJ promises.
+pub async fn new_select_with_cancellation() -> Result<()> {
+    naive_select(
+        crate::ffi::new_coroutine_promise_void().into_future(),
+        crate::ffi::new_cancellation_detecting_promise_void().into_future(),
+    )
+    .await
+    .map_err(Error::other)
+}
+
+// =======================================================================================
+// NaughtyFuture test helpers
+//
+// These helpers test that a RustPromiseAwaiter can survive the death of the FuturePollEvent that
+// first polled it, and be correctly re-linked to a new FuturePollEvent by a subsequent poll.
+//
+// The pattern: phase 1 (poll_and_stash_promise_future) creates a PromiseFuture for a manually
+// fulfillable KJ promise, polls it once under a KJ coroutine (linking the RustPromiseAwaiter to
+// that coroutine's FuturePollEvent), then stashes the future in a thread_local. Phase 2
+// (unstash_and_await_promise_future) retrieves it and awaits it under a different coroutine.
+//
+// We use a thread_local because we can't easily return the PromiseFuture to C++ through the FFI --
+// it's a Rust trait object (dyn Future) with no CXX-compatible representation. The C++ side uses a
+// file-scope variable for the fulfiller for similar reasons (kj::PromiseFulfiller has no CXX bridge
+// representation).
+
+use std::cell::RefCell;
+
+type StashedFuture = Pin<Box<dyn Future<Output = std::result::Result<(), cxx::KjException>>>>;
+
+thread_local! {
+    static STASHED_FUTURE: RefCell<Option<StashedFuture>> = const { RefCell::new(None) };
+}
+
+/// Phase 1: Create a `PromiseFuture` for a fulfillable KJ promise, poll it once (creating the
+/// `RustPromiseAwaiter` and linking it to the current `FuturePollEvent`), then stash it.
+pub async fn poll_and_stash_promise_future() -> Result<()> {
+    let mut future: StashedFuture =
+        Box::pin(crate::ffi::new_fulfillable_promise_void().into_future());
+
+    // Poll once to initialize the RustPromiseAwaiter and link it to our FuturePollEvent.
+    let is_ready = std::future::poll_fn(|cx| match future.as_mut().poll(cx) {
+        Poll::Pending => Poll::Ready(false),
+        Poll::Ready(_) => Poll::Ready(true),
+    })
+    .await;
+
+    assert!(!is_ready, "expected the fulfillable promise to be pending");
+
+    STASHED_FUTURE.with(|f| {
+        *f.borrow_mut() = Some(future);
+    });
+
+    Ok(())
+}
+
+/// Phase 2: Retrieve the stashed future and await it to completion under a new `FuturePollEvent`.
+pub async fn unstash_and_await_promise_future() -> Result<()> {
+    let future = STASHED_FUTURE.with(|f| f.borrow_mut().take().expect("no stashed future"));
+    future.await.map_err(Error::other)?;
+    Ok(())
+}
+
+/// Creates a cancellation-detecting promise future and immediately drops it without ever polling it.
+/// This verifies that Rust's `OwnPromiseNode::drop()` correctly cancels the underlying KJ promise
+/// even when no `RustPromiseAwaiter` was constructed.
+pub async fn new_drop_cancellable_promise_without_polling() -> Result<()> {
+    let _future = crate::ffi::new_cancellation_detecting_promise_void();
+    // _future is dropped here without being .awaited
+    Ok(())
 }

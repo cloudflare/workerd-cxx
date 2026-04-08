@@ -22,7 +22,7 @@ rust_library(
         ":test-date",
         ":test-promises",
         ":test-maybe",
-        # TODO(now): Why isn't :cxx transitive?
+        # TODO(cleanup): Why isn't :cxx transitive?
         "@workerd-cxx//:cxx",
         "//kj-rs",
     ],
@@ -116,6 +116,22 @@ cc_library(
     visibility = ["//visibility:public"],
     deps = [
         ":test-date-bridge",
+    ],
+)
+
+cc_test(
+    name = "linked-group-test",
+    size = "small",
+    srcs = [
+        "linked-group-test.c++",
+    ],
+    linkstatic = select({
+        "@platforms//os:windows": True,
+        "//conditions:default": False,
+    }),
+    deps = [
+        "//kj-rs",
+        "@capnp-cpp//src/kj:kj-test",
     ],
 )
 

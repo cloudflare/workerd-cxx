@@ -61,7 +61,7 @@ mod ffi {
         type OptionWaker;
         fn set(&mut self, waker: &WakerRef);
         fn set_none(&mut self);
-        fn wake_mut(&mut self);
+        fn wake_if_some(&mut self);
     }
 
     #[allow(clippy::should_implement_trait)]

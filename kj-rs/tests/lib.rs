@@ -13,10 +13,13 @@ mod test_own;
 mod test_refcount;
 
 use test_futures::{
-    new_awaiting_future_i32, new_error_handling_future_void_infallible, new_errored_future_void,
-    new_kj_errored_future_void, new_layered_ready_future_void, new_naive_select_future_void,
-    new_pending_future_void, new_ready_future_i32, new_ready_future_void,
-    new_threaded_delay_future_void, new_waking_future_void, new_wrapped_waker_future_void,
+    new_drop_cancellable_promise_without_polling, new_error_handling_future_void_infallible,
+    new_errored_future_void, new_future_awaiting_cancellable_promise, new_kj_errored_future_void,
+    new_layered_ready_future_void, new_naive_select_future_void, new_pending_future_void,
+    new_promise_i32_awaiting_future_void, new_ready_future_i32, new_ready_future_void,
+    new_select_with_cancellation, new_threaded_delay_future_void, new_two_step_cancellable_future,
+    new_waking_future_void, new_wrapped_waker_future_void, poll_and_stash_promise_future,
+    unstash_and_await_promise_future,
 };
 
 use test_maybe::{
@@ -48,6 +51,18 @@ mod ffi {
         async fn new_errored_promise_void();
         async fn new_ready_promise_i32(value: i32) -> i32;
         async fn new_ready_promise_shared_type() -> Shared;
+
+        // Cancellation testing helpers.
+        #[allow(dead_code)]
+        fn reset_cancellation_counter();
+        #[allow(dead_code)]
+        fn get_cancellation_counter() -> u64;
+        async fn new_cancellation_detecting_promise_void();
+
+        // Manually fulfillable promise helpers.
+        async fn new_fulfillable_promise_void();
+        #[allow(dead_code)]
+        fn fulfill_stored_promise();
     }
 
     // Helper functions to test `kj_rs::KjOwn`
@@ -284,11 +299,21 @@ mod ffi {
 
         async fn new_error_handling_future_void_infallible();
 
-        async fn new_awaiting_future_i32() -> Result<()>;
+        async fn new_promise_i32_awaiting_future_void() -> Result<()>;
         async fn new_ready_future_i32(value: i32) -> Result<i32>;
         async fn new_pass_through_feature_shared() -> Shared;
 
         async unsafe fn work_before_poll<'a>(target: &'a mut u64) -> Result<()>;
+
+        // Cancellation test helpers.
+        async fn new_future_awaiting_cancellable_promise() -> Result<()>;
+        async fn new_two_step_cancellable_future() -> Result<()>;
+        async fn new_select_with_cancellation() -> Result<()>;
+        async fn new_drop_cancellable_promise_without_polling() -> Result<()>;
+
+        // NaughtyFuture test helpers.
+        async fn poll_and_stash_promise_future() -> Result<()>;
+        async fn unstash_and_await_promise_future() -> Result<()>;
     }
 
     // these are used to check compilation only
