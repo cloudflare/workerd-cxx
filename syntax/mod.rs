@@ -299,6 +299,7 @@ pub enum Type {
     WeakPtr(Box<Ty1>),
     Ref(Box<Ref>),
     Ptr(Box<Ptr>),
+    NonNull(Box<Ty1>),
     Str(Box<Ref>),
     CxxVector(Box<Ty1>),
     Fn(Box<Signature>),
