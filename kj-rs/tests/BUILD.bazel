@@ -131,6 +131,7 @@ cc_test(
     }),
     deps = [
         "//kj-rs",
+        "//third-party:runtime",
         "@capnp-cpp//src/kj:kj-test",
     ],
 )
