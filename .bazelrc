@@ -16,10 +16,10 @@ common --incompatible_disable_native_repo_rules
 
 build --enable_platform_specific_config
 
-build:linux --action_env=CC=clang --action_env=CXX=clang++
+build:linux --repo_env=CC=clang
 build:linux --cxxopt=-std=c++23 --host_cxxopt=-std=c++23
 
-build:macos --action_env=CC=clang --action_env=CXX=clang++
+build:macos --repo_env=CC=clang
 build:macos --cxxopt=-std=c++23 --host_cxxopt=-std=c++23
 
 startup --windows_enable_symlinks
