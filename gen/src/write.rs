@@ -1772,16 +1772,17 @@ fn write_kj_rc(out: &mut OutFile, key: NamedImplKey) {
     out.include.utility = true;
     out.include.kj_rs = true;
 
-    // Static disposers are not supported, only Owns containing 2 pointers are allowed
+    // Rust `KjRc<T>` is pointer-sized, so C++ `kj::Rc<T>` must also be
+    // pointer-sized for ABI compatibility.
     writeln!(
         out,
-        "static_assert(sizeof(::kj::Rc<{}>) == 2 * sizeof(void *), \"Static disposers for Own are not supported in workerd-cxx\");",
-        inner,
+        "static_assert(sizeof(::kj::Rc<{}>) == sizeof(void *), \"kj::Rc must be pointer-sized in workerd-cxx\");",
+        inner
     );
     writeln!(
         out,
-        "static_assert(alignof(::kj::Rc<{}>) == sizeof(void *), \"Static disposers for Own are not supported in workerd-cxx\");",
-        inner,
+        "static_assert(alignof(::kj::Rc<{}>) == alignof(void *), \"kj::Rc alignment must match pointer alignment in workerd-cxx\");",
+        inner
     );
     writeln!(
         out,
@@ -1805,6 +1806,24 @@ fn write_kj_rc(out: &mut OutFile, key: NamedImplKey) {
         instance, inner, inner
     );
     writeln!(out, "  ::new (ret) ::kj::Rc<{}>(ptr->addRef());", inner);
+    writeln!(out, "}}");
+
+    begin_function_definition(out);
+    writeln!(
+        out,
+        "void cxxbridge1$kj_rs$rc${}$get_ptr(::kj::Rc<{}> *ptr, {} const **ret) noexcept {{",
+        instance, inner, inner,
+    );
+    writeln!(out, "  *ret = ptr->get();");
+    writeln!(out, "}}");
+
+    begin_function_definition(out);
+    writeln!(
+        out,
+        "void cxxbridge1$kj_rs$rc${}$drop(::kj::Rc<{}> *ptr) noexcept {{",
+        instance, inner,
+    );
+    writeln!(out, "  ptr->~Rc();");
     writeln!(out, "}}");
 }
 

@@ -1727,6 +1727,8 @@ fn expand_kj_rc(key: NamedImplKey, types: &Types, explicit_impl: Option<&Impl>) 
     let prefix = format!("cxxbridge1$kj_rs$rc${}$", resolve.name.to_symbol());
     let is_shared = format!("{}is_shared", prefix);
     let add_ref = format!("{}add_ref", prefix);
+    let get_ptr = format!("{}get_ptr", prefix);
+    let drop = format!("{}drop", prefix);
 
     let begin_span = explicit_impl.map_or(key.begin_span, |explicit| explicit.impl_token.span);
     let end_span = explicit_impl.map_or(key.end_span, |explicit| explicit.brace_token.span.join());
@@ -1755,6 +1757,26 @@ fn expand_kj_rc(key: NamedImplKey, types: &Types, explicit_impl: Option<&Impl>) 
                 unsafe {
                     __add_ref(rc as *const ::kj_rs::repr::KjRc<#ident>, ret.as_mut_ptr());
                     ret.assume_init()
+                }
+            }
+            unsafe fn get_ptr(rc: &::kj_rs::repr::KjRc<#ident>) -> *const #ident {
+                #UnsafeExtern extern "C" {
+                    #[link_name = #get_ptr]
+                    fn __get_ptr(refcounted: *const ::kj_rs::repr::KjRc<#ident>, ret: *mut *const #ident);
+                }
+                let mut ret = ::cxx::core::mem::MaybeUninit::uninit();
+                unsafe {
+                    __get_ptr(rc as *const ::kj_rs::repr::KjRc<#ident>, ret.as_mut_ptr());
+                    ret.assume_init()
+                }
+            }
+            unsafe fn drop_rc(rc: *mut ::kj_rs::repr::KjRc<#ident>) {
+                #UnsafeExtern extern "C" {
+                    #[link_name = #drop]
+                    fn __drop(refcounted: *mut ::kj_rs::repr::KjRc<#ident>);
+                }
+                unsafe {
+                    __drop(rc);
                 }
             }
         }
