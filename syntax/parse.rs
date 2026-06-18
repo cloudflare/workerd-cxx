@@ -1063,7 +1063,8 @@ fn parse_impl(cx: &mut Errors, imp: ItemImpl) -> Result<Api> {
         | Type::SharedPtr(ty)
         | Type::WeakPtr(ty)
         | Type::KjMaybe(ty)
-        | Type::CxxVector(ty) => match &ty.inner {
+        | Type::CxxVector(ty)
+        | Type::NonNull(ty) => match &ty.inner {
             Type::Ident(ident) => ident.generics.clone(),
             _ => Lifetimes::default(),
         },
@@ -1279,6 +1280,16 @@ fn parse_type_path(ty: &TypePath) -> Result<Type> {
                     if let GenericArgument::Type(arg) = &generic.args[0] {
                         let inner = parse_type(arg)?;
                         return Ok(Type::WeakPtr(Box::new(Ty1 {
+                            name: ident,
+                            langle: generic.lt_token,
+                            inner,
+                            rangle: generic.gt_token,
+                        })));
+                    }
+                } else if ident == "NonNull" && generic.args.len() == 1 {
+                    if let GenericArgument::Type(arg) = &generic.args[0] {
+                        let inner = parse_type(arg)?;
+                        return Ok(Type::NonNull(Box::new(Ty1 {
                             name: ident,
                             langle: generic.lt_token,
                             inner,
@@ -1533,6 +1544,7 @@ fn has_references_without_lifetime(ty: &Type) -> bool {
         | Type::KjMaybe(t)
         | Type::CxxVector(t) => has_references_without_lifetime(&t.inner),
         Type::Ptr(t) => has_references_without_lifetime(&t.inner),
+        Type::NonNull(t) => has_references_without_lifetime(&t.inner),
         Type::Array(t) => has_references_without_lifetime(&t.inner),
         Type::SliceRef(t) => t.lifetime.is_none(),
         Type::Ref(t) => t.lifetime.is_none(),

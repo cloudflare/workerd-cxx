@@ -37,6 +37,7 @@ impl Types<'_> {
             | Type::Fn(_)
             | Type::SliceRef(_)
             | Type::Ptr(_)
+            | Type::NonNull(_)
             | Type::KjDate(_) => true,
             // kj::Maybe can't be considered to be a POD:
             // <https://itanium-cxx-abi.github.io/cxx-abi/abi.html#non-trivial>
