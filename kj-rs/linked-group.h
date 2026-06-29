@@ -58,11 +58,7 @@ namespace kj_rs {
 //
 // TODO(someday): Multiple inheritance if an object must join multiple groups, or a group must
 //   have multiple linked object types? Can we write something like `linkedGroup<G>()` in the
-//   LinkedObject derived class, and `linkedObjects<O>()` in the LinkedGro8up derived class?
-//   - Test: Order in which LinkedObjects are added.
-//   - Test: Redundant set() does not change position of LinkedObject in list.
-//   - Test: Lifetimes, of course.
-//   - Test: Iteration and removal.
+//   LinkedObject derived class, and `linkedObjects<O>()` in the LinkedGroup derived class?
 template <typename G, typename O>
 class LinkedGroup;
 template <typename G, typename O>
