@@ -16,3 +16,4 @@ rustversion = "1"
 scratch = "1"
 static_assertions = "1"
 syn = { version = "2", features = ["full"] }
+tokio = { version = "1", features = ["macros", "rt"] }

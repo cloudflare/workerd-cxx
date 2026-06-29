@@ -6,6 +6,10 @@
 #![allow(clippy::should_panic_without_expect)]
 #![allow(clippy::missing_panics_doc)]
 
+// `test_awaitables` contains only `#[tokio::test]` functions, so it is compiled solely in test
+// builds. Gating it keeps its imports from tripping `unused_imports` in the non-test library build.
+#[cfg(test)]
+mod test_awaitables;
 mod test_date;
 mod test_futures;
 mod test_maybe;
