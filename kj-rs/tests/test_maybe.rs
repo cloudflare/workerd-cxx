@@ -264,4 +264,31 @@ pub mod tests {
     fn test_maybe_driver() {
         ffi::test_maybe_reference_shared_own_driver();
     }
+
+    // C++ -> Rust: `KjMaybe<String>` round-trips as an owned string. The `empty` case verifies
+    // that `Some("")` survives the FFI without being folded into `None`.
+    #[test]
+    fn test_maybe_string_from_cxx() {
+        let some: KjMaybe<String> = ffi::test_maybe_string_some();
+        let opt: Option<String> = some.into();
+        assert_eq!(opt.as_deref(), Some("hello"));
+
+        let empty: KjMaybe<String> = ffi::test_maybe_string_empty();
+        let opt: Option<String> = empty.into();
+        assert_eq!(opt.as_deref(), Some(""));
+
+        let none: KjMaybe<String> = ffi::test_maybe_string_none();
+        assert!(none.is_none());
+        let opt: Option<String> = none.into();
+        assert!(opt.is_none());
+    }
+
+    // Rust -> C++: same three cases in the opposite direction. C++ asserts equality on the far
+    // side and panics via `KJ_FAIL_ASSERT` if the value it receives is wrong.
+    #[test]
+    fn test_maybe_string_to_cxx() {
+        ffi::cxx_take_maybe_string_some(KjMaybe::from(Some("world".to_owned())));
+        ffi::cxx_take_maybe_string_empty(KjMaybe::from(Some(String::new())));
+        ffi::cxx_take_maybe_string_none(KjMaybe::from(Option::<String>::None));
+    }
 }
