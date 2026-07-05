@@ -182,7 +182,7 @@ macro_rules! impl_maybe_item_for_primitive {
 
 impl_maybe_item_for_has_niche!(crate::KjOwn<T>, &T, &mut T, Pin<&mut T>);
 impl_maybe_item_for_primitive!(
-    u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64, bool, &str
+    u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize, f32, f64, bool, &str, String
 );
 
 unsafe impl<T> MaybeItem for &[T] {
@@ -301,6 +301,9 @@ pub(crate) mod repr {
     // `kj::Rc<T>` has no niche, so `kj::Maybe<kj::Rc<T>>` carries a separate flag:
     // a `bool` discriminant followed by the two-pointer `kj::Rc` value.
     assert_eq_size!(KjMaybe<crate::KjRc<isize>>, [usize; 3]);
+    // `String` (three-pointer struct, no niche) uses the same layout: `bool` discriminant plus
+    // padding, followed by three pointers.
+    assert_eq_size!(KjMaybe<String>, [usize; 4]);
 
     impl<T: MaybeItem> KjMaybe<T> {
         /// # Safety

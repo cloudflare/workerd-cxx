@@ -206,4 +206,34 @@ kj::Maybe<uint64_t&> test_maybe_pin_mut_some() {
 kj::Maybe<uint64_t&> test_maybe_pin_mut_none() {
   return kj::none;
 }
+
+kj::Maybe<::rust::String> test_maybe_string_some() {
+  return kj::some(::rust::String("hello"));
+}
+kj::Maybe<::rust::String> test_maybe_string_empty() {
+  return kj::some(::rust::String(""));
+}
+kj::Maybe<::rust::String> test_maybe_string_none() {
+  return kj::none;
+}
+
+void cxx_take_maybe_string_some(kj::Maybe<::rust::String> maybe) {
+  KJ_IF_SOME(val, maybe) {
+    KJ_ASSERT(kj::str(val) == "world");
+  } else {
+    KJ_FAIL_ASSERT("expected Some(\"world\"), got None");
+  }
+}
+void cxx_take_maybe_string_empty(kj::Maybe<::rust::String> maybe) {
+  KJ_IF_SOME(val, maybe) {
+    KJ_ASSERT(kj::str(val) == "");
+  } else {
+    KJ_FAIL_ASSERT("expected Some(\"\"), got None -- empty string must not be conflated with none");
+  }
+}
+void cxx_take_maybe_string_none(kj::Maybe<::rust::String> maybe) {
+  KJ_IF_SOME(_, maybe) {
+    KJ_FAIL_ASSERT("expected None, got Some");
+  }
+}
 }  // namespace kj_rs_demo

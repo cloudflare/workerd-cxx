@@ -278,6 +278,24 @@ mod ffi {
         fn test_maybe_u8_slice_none() -> KjMaybe<&'static [u8]>;
         #[allow(dead_code)]
         fn test_maybe_pin_mut_none<'a>() -> KjMaybe<Pin<&'a mut u64>>;
+
+        // `KjMaybe<String>` (owned string) round-trip: distinct from `KjMaybe<&str>` above, which
+        // is only borrows. The `_empty` variant proves that `Some("")` survives the FFI without
+        // being conflated with `None`.
+        #[allow(dead_code)]
+        fn test_maybe_string_some() -> KjMaybe<String>;
+        #[allow(dead_code)]
+        fn test_maybe_string_empty() -> KjMaybe<String>;
+        #[allow(dead_code)]
+        fn test_maybe_string_none() -> KjMaybe<String>;
+
+        // Round-trip: C++ verifies whether the Rust-supplied `KjMaybe<String>` was Some/empty/None.
+        #[allow(dead_code)]
+        fn cxx_take_maybe_string_some(maybe: KjMaybe<String>);
+        #[allow(dead_code)]
+        fn cxx_take_maybe_string_empty(maybe: KjMaybe<String>);
+        #[allow(dead_code)]
+        fn cxx_take_maybe_string_none(maybe: KjMaybe<String>);
     }
 
     extern "Rust" {

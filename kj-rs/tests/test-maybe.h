@@ -65,4 +65,15 @@ kj::Maybe<rust::Slice<const kj::byte>> test_maybe_u8_slice_none();
 kj::Maybe<uint64_t&> test_maybe_pin_mut_some();
 kj::Maybe<uint64_t&> test_maybe_pin_mut_none();
 
+// `kj::Maybe<::rust::String>` round-trip. The `_empty` variant returns `Some("")` -- distinct from
+// `_none` -- to prove the FFI preserves the some/none distinction rather than folding an empty
+// string into `kj::none`.
+kj::Maybe<::rust::String> test_maybe_string_some();
+kj::Maybe<::rust::String> test_maybe_string_empty();
+kj::Maybe<::rust::String> test_maybe_string_none();
+
+void cxx_take_maybe_string_some(kj::Maybe<::rust::String> maybe);
+void cxx_take_maybe_string_empty(kj::Maybe<::rust::String> maybe);
+void cxx_take_maybe_string_none(kj::Maybe<::rust::String> maybe);
+
 }  // namespace kj_rs_demo

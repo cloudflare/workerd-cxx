@@ -285,7 +285,8 @@ fn check_type_kj_maybe(cx: &mut Check, ptr: &Ty1) {
             match Atom::from(&ident.rust) {
                 None
                 | Some(
-                    Bool | U8 | U16 | U32 | U64 | Usize | I8 | I16 | I32 | I64 | Isize | F32 | F64,
+                    Bool | U8 | U16 | U32 | U64 | Usize | I8 | I16 | I32 | I64 | Isize | F32 | F64
+                    | RustString,
                 ) => return,
                 Some(_) => {}
             }
