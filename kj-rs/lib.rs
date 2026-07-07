@@ -22,6 +22,7 @@ pub mod maybe;
 mod own;
 mod promise;
 pub mod refcount;
+pub mod runtime;
 mod waker;
 
 pub mod repr {
@@ -105,5 +106,21 @@ mod ffi {
 
         #[must_use]
         fn take_own_promise_node(self: Pin<&mut GuardedRustPromiseAwaiter>) -> OwnPromiseNode;
+    }
+
+    // TODO(cleanup): Switch from UniquePtr to KjOwn once the CXX proc macro can resolve KjOwn
+    // from within the kj_rs crate. Currently, KjOwn expands to `::kj_rs::repr::KjOwn` which
+    // fails when used inside kj_rs itself. UniquePtr works but is unconditionally !Send for
+    // opaque types, requiring an extra `unsafe impl Send` on the wrapper struct.
+    unsafe extern "C++" {
+        include!("kj-rs/runtime.h");
+
+        type KjRuntimeImpl;
+
+        fn newKjRuntime() -> UniquePtr<KjRuntimeImpl>;
+        fn enterScope(self: Pin<&mut KjRuntimeImpl>);
+        fn leaveScope(self: Pin<&mut KjRuntimeImpl>);
+        fn poll(self: Pin<&mut KjRuntimeImpl>) -> u32;
+        fn isRunnable(self: Pin<&mut KjRuntimeImpl>) -> bool;
     }
 }
