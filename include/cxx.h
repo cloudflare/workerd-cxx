@@ -87,18 +87,29 @@ struct Result final {
   }
 
   // Invoked from the `catch (...)` handler that generated code wraps around
-  // every non-fallible `extern "C++"` shim. A C++ exception must never unwind
-  // out of such a shim: the shim is `noexcept` and sits directly below Rust
-  // `extern "C"` (nounwind) frames, so an escaping exception is undefined
-  // behavior. In practice the outcome is nondeterministic -- sometimes a clean
-  // `std::terminate`, but often a SIGSEGV when the C++ unwinder walks stack
-  // frames it cannot decode (e.g. JIT-compiled frames with no unwind info).
+  // every non-fallible `extern "C++"` shim.
   //
-  // Catching the exception here, in the frame adjacent to the throw, keeps
-  // unwinding entirely within decodable C++ frames and converts the failure
-  // into a single deterministic, diagnosable abort. If the error should instead
-  // be delivered to Rust, declare the function as returning `Result<T>` in the
-  // bridge; cxx will then translate the exception into a Rust `Err`.
+  // Strictly, an exception escaping the shim itself is well-defined: the shim
+  // is `noexcept`, so the escape is `std::terminate`. The real hazard is one
+  // frame up. The shim sits directly below a Rust `extern "C"` (nounwind)
+  // frame, and above that, often, foreign frames with no unwind info (e.g.
+  // JIT-compiled frames). If the `noexcept` boundary is bypassed -- inlining
+  // or cross-language LTO can fold the tiny shim into its nounwind Rust
+  // caller, so no `noexcept` frame remains to stop the unwind -- the exception
+  // propagates into `nounwind` Rust land. That is genuine undefined behavior:
+  // the optimizer emitted no cleanup landing pads, so Rust destructors are
+  // silently skipped (locks stay held, `Rc`s are not decremented, borrow flags
+  // are not cleared, live handles are left dangling), and the C++ unwinder may
+  // then walk frames it cannot decode. The observed symptom is nondeterministic
+  // -- sometimes a clean abort, but often a *delayed* SIGSEGV once the corrupted
+  // state is next touched, or a crash inside the unwinder itself.
+  //
+  // Catching the exception here, in the frame adjacent to the throw, forces the
+  // failure into a single deterministic, diagnosable abort *before* it can reach
+  // the Rust `extern "C"` frame -- regardless of whether the `noexcept` boundary
+  // survived optimization. If the error should instead be delivered to Rust,
+  // declare the function as returning `Result<T>` in the bridge; cxx will then
+  // translate the exception into a Rust `Err`.
   //
   // Precondition: must be called only from within a `catch (...)` handler,
   // i.e. while an exception is in flight (this uses a bare `throw;` to inspect

@@ -816,10 +816,16 @@ fn write_cxx_function_shim<'a>(out: &mut OutFile<'a>, efn: &'a ExternFn) {
         write!(out, "        ");
     } else {
         // A non-fallible extern "C++" function is not allowed to throw, but if
-        // it does anyway (e.g. an unexpected kj::Exception) letting the throw
-        // escape this `noexcept` shim across the Rust FFI boundary is undefined
-        // behavior. Catch it here, adjacent to the call, and convert it into a
-        // deterministic abort rather than risking a segfault during unwinding.
+        // it does anyway (e.g. an unexpected kj::Exception) the throw must not
+        // reach the Rust `extern "C"` (nounwind) frame above this shim. This
+        // shim is `noexcept`, so an escape is `std::terminate` on its own -- but
+        // inlining/LTO can fold the shim into its nounwind Rust caller, leaving
+        // no `noexcept` frame to stop the unwind. The exception then propagates
+        // into nounwind Rust land, which is undefined behavior: Rust destructors
+        // are silently skipped (dangling locks/handles) and a delayed SIGSEGV or
+        // unwinder crash follows. Catch it here, adjacent to the call, to force a
+        // deterministic, diagnosable abort. See terminateWithUncaughtException in
+        // include/cxx.h for the full rationale.
         writeln!(out, "try {{");
         write!(out, "    ");
     }
