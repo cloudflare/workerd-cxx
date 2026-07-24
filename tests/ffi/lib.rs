@@ -288,6 +288,12 @@ pub mod ffi {
         fn c_cancel_via_rust_return_primitive() -> Result<usize>;
         fn c_cancel_roundtrip_return_primitive() -> Result<usize>;
 
+        // Intentionally NOT declared `-> Result`, even though it throws. This
+        // exercises the generated always-catch guard, which must convert the
+        // escaping C++ exception into a deterministic abort rather than let it
+        // unwind out of the `noexcept` shim across the FFI boundary (UB).
+        fn c_throw_from_infallible();
+
         fn c_try_return_box() -> Result<Box<R>>;
         unsafe fn c_try_return_ref<'a>(s: &'a String) -> Result<&'a String>;
         unsafe fn c_try_return_str<'a>(s: &'a str) -> Result<&'a str>;

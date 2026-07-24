@@ -4,6 +4,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <cstdlib>
 #include <exception>
 #include <initializer_list>
 #include <iosfwd>
@@ -32,6 +33,7 @@
 #define __WORKERD_CXX__
 #endif
 
+#include <kj/debug.h>
 #include <kj/exception.h>
 
 namespace rust {
@@ -82,6 +84,41 @@ struct Result final {
 
   static Result canceled() {
     return {.exception = reinterpret_cast<kj::Exception *>(0x1)};
+  }
+
+  // Invoked from the `catch (...)` handler that generated code wraps around
+  // every non-fallible `extern "C++"` shim. A C++ exception must never unwind
+  // out of such a shim: the shim is `noexcept` and sits directly below Rust
+  // `extern "C"` (nounwind) frames, so an escaping exception is undefined
+  // behavior. In practice the outcome is nondeterministic -- sometimes a clean
+  // `std::terminate`, but often a SIGSEGV when the C++ unwinder walks stack
+  // frames it cannot decode (e.g. JIT-compiled frames with no unwind info).
+  //
+  // Catching the exception here, in the frame adjacent to the throw, keeps
+  // unwinding entirely within decodable C++ frames and converts the failure
+  // into a single deterministic, diagnosable abort. If the error should instead
+  // be delivered to Rust, declare the function as returning `Result<T>` in the
+  // bridge; cxx will then translate the exception into a Rust `Err`.
+  //
+  // Precondition: must be called only from within a `catch (...)` handler,
+  // i.e. while an exception is in flight (this uses a bare `throw;` to inspect
+  // it).
+  [[noreturn]] static void
+  terminateWithUncaughtException(const char *function) {
+    constexpr const char *kMessage =
+        "a C++ exception escaped a non-fallible cxx function across the FFI "
+        "boundary; declare it as returning Result<T> in the #[cxx::bridge] to "
+        "propagate the error to Rust instead of aborting the process";
+    try {
+      throw;
+    } catch (const kj::Exception &e) {
+      KJ_LOG(FATAL, kMessage, function, e);
+    } catch (const std::exception &e) {
+      KJ_LOG(FATAL, kMessage, function, e.what());
+    } catch (...) {
+      KJ_LOG(FATAL, kMessage, function);
+    }
+    ::std::abort();
   }
 
   template <typename Func>

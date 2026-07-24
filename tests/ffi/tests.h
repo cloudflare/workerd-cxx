@@ -288,6 +288,7 @@ size_t c_fail_kj_exception_with_details_return_primitive();
 size_t c_cancel_return_primitive();
 size_t c_cancel_via_rust_return_primitive();
 size_t c_cancel_roundtrip_return_primitive();
+void c_throw_from_infallible();
 rust::Box<R> c_try_return_box();
 const rust::String &c_try_return_ref(const rust::String &);
 rust::Str c_try_return_str(rust::Str);

@@ -814,6 +814,14 @@ fn write_cxx_function_shim<'a>(out: &mut OutFile<'a>, efn: &'a ExternFn) {
         out.builtin.trycatch = true;
         writeln!(out, "return ::rust::repr::Result::run([&] {{");
         write!(out, "        ");
+    } else {
+        // A non-fallible extern "C++" function is not allowed to throw, but if
+        // it does anyway (e.g. an unexpected kj::Exception) letting the throw
+        // escape this `noexcept` shim across the Rust FFI boundary is undefined
+        // behavior. Catch it here, adjacent to the call, and convert it into a
+        // deterministic abort rather than risking a segfault during unwinding.
+        writeln!(out, "try {{");
+        write!(out, "    ");
     }
     if indirect_return {
         out.include.new = true;
@@ -864,6 +872,14 @@ fn write_cxx_function_shim<'a>(out: &mut OutFile<'a>, efn: &'a ExternFn) {
     writeln!(out, ";");
     if efn.throws {
         writeln!(out, "  }});");
+    } else {
+        writeln!(out, "  }} catch (...) {{");
+        writeln!(
+            out,
+            "    ::rust::repr::Result::terminateWithUncaughtException(\"{}\");",
+            efn.name.to_fully_qualified(),
+        );
+        writeln!(out, "  }}");
     }
     writeln!(out, "}}");
     for arg in &efn.args {

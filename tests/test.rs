@@ -329,6 +329,60 @@ fn test_c_try_return() {
     assert_eq!("2020", &*ffi::c_try_return_unique_ptr_string().unwrap());
 }
 
+// A C++ function that is NOT declared `-> Result` but throws anyway must not
+// invoke undefined behavior across the FFI boundary. The generated shim wraps
+// the call in `catch (...)` and converts the escaping exception into a
+// deterministic `abort()` (SIGABRT) with a diagnostic -- never a segfault and
+// never a silent success.
+//
+// The throw aborts the process, so it is exercised in a re-exec'd child and the
+// parent inspects the child's termination.
+#[cfg(unix)]
+#[test]
+fn test_infallible_cxx_exception_aborts() {
+    use std::os::unix::process::ExitStatusExt;
+
+    const CHILD_ENV: &str = "CXX_TEST_INFALLIBLE_THROW_CHILD";
+    const SIGABRT: i32 = 6;
+
+    // Child mode: trigger the throw. This must abort the process from inside
+    // the generated shim's catch handler and must never return here.
+    if std::env::var_os(CHILD_ENV).is_some() {
+        ffi::c_throw_from_infallible();
+        // If we reach this line the guard failed to abort.
+        eprintln!("BUG: c_throw_from_infallible returned without aborting");
+        std::process::exit(0);
+    }
+
+    // Parent mode: re-run just this test in a child process with the env set.
+    let exe = std::env::current_exe().expect("current_exe");
+    let output = std::process::Command::new(exe)
+        .args(["--exact", "test_infallible_cxx_exception_aborts"])
+        .env(CHILD_ENV, "1")
+        .output()
+        .expect("spawn child");
+
+    let status = output.status;
+    assert!(
+        status.code().is_none(),
+        "child should have been killed by a signal (abort), but exited with {status:?}"
+    );
+    assert_eq!(
+        status.signal(),
+        Some(SIGABRT),
+        "child must abort deterministically (SIGABRT), not e.g. SIGSEGV; got signal {:?}\nstderr:\n{}",
+        status.signal(),
+        String::from_utf8_lossy(&output.stderr),
+    );
+
+    // The abort should carry the diagnostic pointing at the fix.
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(
+        stderr.contains("non-fallible") && stderr.contains("Result<T>"),
+        "expected FFI-boundary diagnostic in child stderr, got:\n{stderr}"
+    );
+}
+
 #[test]
 fn test_c_take() {
     let unique_ptr = ffi::c_return_unique_ptr();

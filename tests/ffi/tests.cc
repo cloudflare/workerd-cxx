@@ -802,6 +802,10 @@ size_t c_fail_kj_exception_with_details_return_primitive() {
 
 size_t c_cancel_return_primitive() { throw kj::CanceledException{}; }
 
+void c_throw_from_infallible() {
+  throw std::runtime_error("exception from a non-fallible C++ function");
+}
+
 // Call Rust function that panics with CanceledException
 // This will be caught and re-thrown as kj::CanceledException
 size_t c_cancel_via_rust_return_primitive() {
@@ -1194,6 +1198,54 @@ extern "C" const char *cxx_run_test() noexcept {
   rust::String bad_utf8_rstring = rust::String::lossy(bad_utf8_literal);
   rust::String bad_utf16_rstring = rust::String::lossy(bad_utf16_literal);
   ASSERT(bad_utf8_rstring == bad_utf16_rstring);
+
+  // The non-lossy `rust::String` constructors throw `std::invalid_argument`
+  // when given data that is not valid Unicode. This is intended, documented
+  // cxx behavior: a lone (unpaired) UTF-16 surrogate cannot be represented in
+  // a UTF-8-backed `rust::String`. Callers that may receive invalid input must
+  // either use the `lossy` variants or declare their bridge function fallible
+  // (`-> Result<...>`) so cxx wraps the shim in a try/catch. A non-fallible
+  // bridge declaration marks the extern "C" shim `noexcept`, so a throw here
+  // would terminate the process.
+  {
+    // Class B from the URL boundary bug report: a lone low surrogate.
+    const char16_t lone_surrogate[] = {u'a', 0xDC00, 0};
+    bool threw_invalid_argument = false;
+    try {
+      rust::String will_throw(lone_surrogate);
+      (void)will_throw;
+    } catch (const std::invalid_argument &) {
+      threw_invalid_argument = true;
+    }
+    ASSERT(threw_invalid_argument);
+
+    // The explicit-length constructor throws on the same input.
+    threw_invalid_argument = false;
+    try {
+      rust::String will_throw(lone_surrogate, 2);
+      (void)will_throw;
+    } catch (const std::invalid_argument &) {
+      threw_invalid_argument = true;
+    }
+    ASSERT(threw_invalid_argument);
+
+    // The lossy variant is noexcept and substitutes U+FFFD (replacement char)
+    // for the lone surrogate rather than throwing.
+    rust::String lossy_ok = rust::String::lossy(lone_surrogate);
+    const char16_t expected_utf16[] = {u'a', 0xFFFD, 0};
+    ASSERT(lossy_ok == rust::String(expected_utf16));
+
+    // A properly paired surrogate (U+10000) is valid UTF-16 and must not throw.
+    const char16_t paired_surrogate[] = {0xD800, 0xDC00, 0};
+    bool paired_ok = true;
+    try {
+      rust::String valid(paired_surrogate);
+      (void)valid;
+    } catch (const std::invalid_argument &) {
+      paired_ok = false;
+    }
+    ASSERT(paired_ok);
+  }
 
   const char *ascii_literal = "42";
   const char *latin1_literal = "\xff";
