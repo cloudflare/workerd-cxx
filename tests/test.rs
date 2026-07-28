@@ -617,6 +617,84 @@ fn test_unwind_safe() {
     require_ref_unwind_safe::<ffi::C>();
 }
 
+/// Runs `f`, which is expected to panic, and returns the panic message.
+fn expect_panic_message<F: FnOnce() + UnwindSafe>(f: F) -> String {
+    let payload = panic::catch_unwind(f).expect_err("expected a panic");
+    if let Some(message) = payload.downcast_ref::<String>() {
+        message.clone()
+    } else if let Some(message) = payload.downcast_ref::<&str>() {
+        (*message).to_owned()
+    } else {
+        panic!("panic payload was not a message");
+    }
+}
+
+// An `extern "C++"` function which is not declared to return a Result has no way of
+// reporting an exception to its caller. The exception must become a panic; letting it
+// escape the extern "C" boundary would terminate the process.
+#[test]
+fn test_infallible_cxx_function_throws() {
+    let message = expect_panic_message(ffi::c_infallible_fail_void);
+    assert!(message.contains("infallible void failure"), "{message}");
+
+    let message = expect_panic_message(|| {
+        let _ = ffi::c_infallible_fail_primitive();
+    });
+    assert!(
+        message.contains("std::exception: infallible logic error"),
+        "{message}"
+    );
+
+    // The kj::Exception type is preserved in the panic message.
+    let message = expect_panic_message(|| {
+        let _ = ffi::c_infallible_fail_kj_exception_disconnected();
+    });
+    assert!(message.contains("Disconnected"), "{message}");
+    assert!(message.contains("infallible disconnect"), "{message}");
+
+    // Return type which travels through an out parameter.
+    let message = expect_panic_message(|| {
+        let _ = ffi::c_infallible_fail_rust_string();
+    });
+    assert!(message.contains("infallible string failure"), "{message}");
+
+    // Neither a kj::Exception nor a std::exception, like jsg::JsExceptionThrown.
+    let message = expect_panic_message(|| {
+        let _ = ffi::c_infallible_fail_foreign_exception();
+    });
+    assert!(message.contains("unknown non-KJ exception"), "{message}");
+
+    // Member function with a receiver.
+    let message = expect_panic_message(|| {
+        let mut unique_ptr = ffi::c_return_unique_ptr();
+        let _ = unique_ptr.pin_mut().get_fail_infallible();
+    });
+    assert!(message.contains("infallible method failure"), "{message}");
+}
+
+#[test]
+fn test_infallible_cxx_function_cancellation() {
+    let payload = panic::catch_unwind(|| {
+        let _ = ffi::c_infallible_cancel();
+    })
+    .expect_err("expected a panic");
+    assert!(
+        payload.downcast_ref::<cxx::CanceledException>().is_some(),
+        "expected panic payload to be CanceledException"
+    );
+}
+
+// C++ -> Rust -> C++ -> Rust, without a Result anywhere along the way. The exception
+// becomes a panic in Rust, a kj::Exception again when it reenters C++, and finally a
+// panic once more.
+#[test]
+fn test_infallible_exception_roundtrip() {
+    let message = expect_panic_message(|| {
+        let _ = ffi::c_infallible_fail_roundtrip();
+    });
+    assert!(message.contains("infallible logic error"), "{message}");
+}
+
 #[test]
 fn test_rust_to_cpp_cancellation() {
     // Test Rust->C++ cancellation: Rust calls C++ function that throws CanceledException

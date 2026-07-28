@@ -60,6 +60,7 @@ public:
   size_t &getMut();
   size_t set_succeed(size_t n);
   size_t get_fail();
+  size_t get_fail_infallible();
   const std::vector<uint8_t> &get_v() const;
   std::vector<uint8_t> &get_v();
   rust::String cOverloadedMethod(int32_t x) const;
@@ -288,6 +289,16 @@ size_t c_fail_kj_exception_with_details_return_primitive();
 size_t c_cancel_return_primitive();
 size_t c_cancel_via_rust_return_primitive();
 size_t c_cancel_roundtrip_return_primitive();
+
+// Functions which throw even though their bridge signature is infallible. Their
+// exceptions must turn into Rust panics rather than terminating the process.
+void c_infallible_fail_void();
+size_t c_infallible_fail_primitive();
+size_t c_infallible_fail_kj_exception_disconnected();
+rust::String c_infallible_fail_rust_string();
+size_t c_infallible_fail_foreign_exception();
+size_t c_infallible_cancel();
+size_t c_infallible_fail_roundtrip();
 rust::Box<R> c_try_return_box();
 const rust::String &c_try_return_ref(const rust::String &);
 rust::Str c_try_return_str(rust::Str);

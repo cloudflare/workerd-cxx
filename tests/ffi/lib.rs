@@ -288,6 +288,16 @@ pub mod ffi {
         fn c_cancel_via_rust_return_primitive() -> Result<usize>;
         fn c_cancel_roundtrip_return_primitive() -> Result<usize>;
 
+        // These signatures are infallible, but the C++ implementations throw.
+        // The exception has to become a panic; it must not abort the process.
+        fn c_infallible_fail_void();
+        fn c_infallible_fail_primitive() -> usize;
+        fn c_infallible_fail_kj_exception_disconnected() -> usize;
+        fn c_infallible_fail_rust_string() -> String;
+        fn c_infallible_fail_foreign_exception() -> usize;
+        fn c_infallible_cancel() -> usize;
+        fn c_infallible_fail_roundtrip() -> usize;
+
         fn c_try_return_box() -> Result<Box<R>>;
         unsafe fn c_try_return_ref<'a>(s: &'a String) -> Result<&'a String>;
         unsafe fn c_try_return_str<'a>(s: &'a str) -> Result<&'a str>;
@@ -306,6 +316,7 @@ pub mod ffi {
         unsafe fn getMut<'a>(self: Pin<&'a mut C>) -> &'a mut usize;
         fn set_succeed(self: Pin<&mut C>, n: usize) -> Result<usize>;
         fn get_fail(self: Pin<&mut C>) -> Result<usize>;
+        fn get_fail_infallible(self: Pin<&mut C>) -> usize;
         fn c_method_on_shared(self: &Shared) -> usize;
         unsafe fn c_method_ref_on_shared<'a>(self: &'a Shared) -> &'a usize;
         unsafe fn c_method_mut_on_shared<'a>(self: &'a mut Shared) -> &'a mut usize;
@@ -433,6 +444,7 @@ pub mod ffi {
         fn r_result_kj_exception_with_details_return_primitive() -> Result<usize>;
         fn r_cancel_panic_test();
         fn r_call_c_cancel_return_primitive();
+        fn r_call_c_infallible_fail_primitive();
         fn r_cancel_via_cpp_return_primitive() -> Result<usize>;
         fn r_cancel_roundtrip_return_primitive() -> Result<usize>;
 
@@ -822,6 +834,14 @@ fn r_cancel_panic_test() {
 // This should result in a panic that propagates back
 fn r_call_c_cancel_return_primitive() {
     let _result = ffi::c_cancel_return_primitive();
+    unreachable!();
+}
+
+// Calling an infallible C++ function which throws panics. Neither this function
+// nor the C++ shim it calls declares a Result, so the exception has to travel
+// back to C++ as a panic converted at this function's own ffi boundary.
+fn r_call_c_infallible_fail_primitive() {
+    let _result = ffi::c_infallible_fail_primitive();
     unreachable!();
 }
 

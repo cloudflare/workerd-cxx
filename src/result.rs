@@ -38,6 +38,41 @@ pub(crate) mod repr {
             }
         }
 
+        /// Turn a C++ exception into a Rust panic.
+        ///
+        /// Called by generated code after invoking an `extern "C++"` function which is
+        /// not declared to return a `Result`. Such a signature has no way of reporting
+        /// an exception to its caller, so the exception is converted into a panic. This
+        /// is what keeps a throwing C++ function from terminating the process: the panic
+        /// is caught again at the next `extern "Rust"` boundary and rethrown there as a
+        /// `kj::Exception`.
+        ///
+        /// # Panics
+        ///
+        /// Panics if the C++ function threw an exception, or with a `CanceledException`
+        /// payload if it threw `kj::CanceledException`.
+        #[track_caller]
+        pub fn panic_on_exception(self) {
+            if let Err(exception) = self.into_result() {
+                // Exceptions which did not originate from a KJ macro have no throw site.
+                let thrown_at = if exception.line() > 0 {
+                    alloc::format!(
+                        " at {}:{}",
+                        exception.file().to_str().unwrap_or("(unknown file)"),
+                        exception.line(),
+                    )
+                } else {
+                    alloc::string::String::new()
+                };
+                panic!(
+                    "C++ exception in infallible ffi function{}: {:?}: {}",
+                    thrown_at,
+                    exception.r#type(),
+                    exception.what(),
+                );
+            }
+        }
+
         /// Convert into a `Result`.
         ///
         /// # Panics
