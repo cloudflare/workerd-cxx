@@ -35,7 +35,7 @@ RustPromiseAwaiter::~RustPromiseAwaiter() noexcept(false) {
   unwindDetector.catchExceptionsIfUnwinding([this]() { node = nullptr; });
 }
 
-kj::Maybe<kj::Own<kj::_::Event>> RustPromiseAwaiter::fire() {
+void RustPromiseAwaiter::fire() {
   // Safety: Our Event can only fire on the event loop which was active when our Event base class
   // was constructed. Therefore, we don't need to check that we're on the correct event loop.
 
@@ -61,8 +61,6 @@ kj::Maybe<kj::Own<kj::_::Event>> RustPromiseAwaiter::fire() {
     // KJ_DEFER above). This shouldn't happen since KJ Events fire at most once, but doing nothing
     // is safe: poll() will see maybeOptionWaker == kj::none and return true.
   }
-
-  return kj::none;
 }
 
 void RustPromiseAwaiter::traceEvent(kj::_::TraceBuilder& builder) {
