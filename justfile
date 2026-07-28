@@ -1,6 +1,7 @@
 alias w := watch
 alias b := build
 alias t := test
+alias f := format
 
 CLANG_TIDY := "clang-tidy-20"
 
