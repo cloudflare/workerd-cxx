@@ -740,12 +740,12 @@ fn write_cxx_function_shim<'a>(out: &mut OutFile<'a>, efn: &'a ExternFn) {
     out.set_namespace(&efn.name.namespace);
     out.begin_block(Block::ExternC);
     begin_function_definition(out);
-    if efn.throws {
-        out.builtin.ptr_len = true;
-        write!(out, "::rust::repr::Result ");
-    } else {
-        write_extern_return_type_space(out, &efn.ret);
-    }
+    // C++ functions always return a Result: an exception must never be allowed to
+    // escape through the extern "C" boundary (that would terminate the process), so
+    // the shim catches everything and hands the exception to Rust, which turns it
+    // into an `Err` for fallible signatures and a panic for infallible ones.
+    out.builtin.ptr_len = true;
+    write!(out, "::rust::repr::Result ");
     let mangled = mangle::extern_fn(efn, out.types);
     write!(out, "{}(", mangled);
     if let Some(receiver) = &efn.receiver {
@@ -765,7 +765,7 @@ fn write_cxx_function_shim<'a>(out: &mut OutFile<'a>, efn: &'a ExternFn) {
         }
         write_cxx_shim_sig_arg(out, arg);
     }
-    let indirect_return = indirect_return(efn, out.types);
+    let indirect_return = indirect_return(efn);
     if indirect_return {
         if !efn.args.is_empty() || efn.receiver.is_some() {
             write!(out, ", ");
@@ -809,32 +809,17 @@ fn write_cxx_function_shim<'a>(out: &mut OutFile<'a>, efn: &'a ExternFn) {
     }
     writeln!(out, ";");
     write!(out, "  ");
-    if efn.throws {
-        out.builtin.ptr_len = true;
-        out.builtin.trycatch = true;
-        writeln!(out, "return ::rust::repr::Result::run([&] {{");
-        write!(out, "        ");
-    }
+    out.builtin.trycatch = true;
+    writeln!(out, "return ::rust::repr::Result::run([&] {{");
+    write!(out, "        ");
     if indirect_return {
         out.include.new = true;
         write!(out, "new (return$) ");
         write_indirect_return_type(out, efn.ret.as_ref().unwrap());
         write!(out, "(");
-    } else if efn.ret.is_some() {
-        write!(out, "return ");
     }
     match &efn.ret {
         Some(Type::Ref(_)) => write!(out, "&"),
-        Some(Type::Str(_)) if !indirect_return => {
-            out.builtin.rust_str_repr = true;
-            write!(out, "::rust::impl<::rust::Str>::repr(");
-        }
-        Some(ty @ Type::SliceRef(_)) if !indirect_return => {
-            out.builtin.rust_slice_repr = true;
-            write!(out, "::rust::impl<");
-            write_type(out, ty);
-            write!(out, ">::repr(");
-        }
         Some(Type::KjDate(_)) => {
             write!(out, "::kj_rs::repr::toNanos(");
         }
@@ -855,16 +840,13 @@ fn write_cxx_function_shim<'a>(out: &mut OutFile<'a>, efn: &'a ExternFn) {
         Some(Type::RustBox(_)) => write!(out, ".into_raw()"),
         Some(Type::UniquePtr(_)) => write!(out, ".release()"),
         Some(Type::KjDate(_)) => write!(out, ")"),
-        Some(Type::Str(_) | Type::SliceRef(_)) if !indirect_return => write!(out, ")"),
         _ => {}
     }
     if indirect_return {
         write!(out, ")");
     }
     writeln!(out, ";");
-    if efn.throws {
-        writeln!(out, "  }});");
-    }
+    writeln!(out, "  }});");
     writeln!(out, "}}");
     for arg in &efn.args {
         if let Type::Fn(f) = &arg.ty {
@@ -1200,10 +1182,10 @@ fn write_return_type(out: &mut OutFile, ty: &Option<Type>) {
     }
 }
 
-fn indirect_return(sig: &Signature, types: &Types) -> bool {
-    sig.ret
-        .as_ref()
-        .is_some_and(|ret| sig.throws || types.needs_indirect_abi(ret))
+// C++ functions always report exceptions through their return value, so any actual
+// return value has to travel through an out parameter.
+fn indirect_return(sig: &Signature) -> bool {
+    sig.ret.is_some()
 }
 
 fn write_indirect_return_type(out: &mut OutFile, ty: &Type) {
@@ -1220,6 +1202,11 @@ fn write_indirect_return_type(out: &mut OutFile, ty: &Type) {
             write!(out, "*");
         }
         Type::Future(_) => write!(out, "kj_rs::repr::KjPromiseNodeImpl"),
+        // kj::Date travels across the boundary as nanoseconds since the unix epoch.
+        Type::KjDate(_) => {
+            out.include.cstdint = true;
+            write!(out, "::std::int64_t");
+        }
         _ => write_type(out, ty),
     }
 }
@@ -1230,31 +1217,6 @@ fn write_indirect_return_type_space(out: &mut OutFile, ty: &Type) {
         Type::RustBox(_) | Type::UniquePtr(_) | Type::Ref(_) => {}
         Type::Str(_) | Type::SliceRef(_) => write!(out, " "),
         _ => write_space_after_type(out, ty),
-    }
-}
-
-fn write_extern_return_type_space(out: &mut OutFile, ty: &Option<Type>) {
-    match ty {
-        Some(Type::RustBox(ty) | Type::UniquePtr(ty)) => {
-            write_type_space(out, &ty.inner);
-            write!(out, "*");
-        }
-        Some(Type::Ref(ty)) => {
-            write_type_space(out, &ty.inner);
-            if !ty.mutable {
-                write!(out, "const ");
-            }
-            write!(out, "*");
-        }
-        Some(Type::Str(_) | Type::SliceRef(_)) => {
-            out.builtin.repr_fat = true;
-            write!(out, "::rust::repr::Fat ");
-        }
-        Some(Type::KjDate(_)) => {
-            write!(out, "::std::int64_t ");
-        }
-        Some(ty) if out.types.needs_indirect_abi(ty) => write!(out, "void "),
-        _ => write_return_type(out, ty),
     }
 }
 

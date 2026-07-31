@@ -497,13 +497,11 @@ fn expand_cxx_function_decl(efn: &ExternFn, types: &Types) -> TokenStream {
         }
     });
     let all_args = receiver.chain(args);
-    let ret = if efn.throws {
-        quote!(-> ::cxx::private::Result)
-    } else {
-        expand_extern_return_type(&efn.ret, types, true)
-    };
+    // C++ functions always return a Result: an exception must never escape through the
+    // extern "C" boundary, so the C++ shim catches it and reports it here instead.
+    let ret = quote!(-> ::cxx::private::Result);
     let mut outparam = None;
-    if indirect_return(efn, types) {
+    if indirect_return(efn) {
         let ret = expand_extern_type(efn.ret.as_ref().unwrap(), types, true);
         outparam = Some(quote!(__return: *mut #ret));
     }
@@ -543,7 +541,7 @@ fn expand_cxx_function_shim(efn: &ExternFn, types: &Types) -> TokenStream {
     } else {
         expand_return_type(&efn.ret)
     };
-    let indirect_return = indirect_return(efn, types);
+    let indirect_return = indirect_return(efn);
     let receiver_var = efn
         .receiver
         .iter()
@@ -653,8 +651,10 @@ fn expand_cxx_function_shim(efn: &ExternFn, types: &Types) -> TokenStream {
                 #local_name(#(#vars,)* __return.as_mut_ptr()).into_result()?;
             }
         } else {
+            // An infallible signature cannot report the exception to its caller, so
+            // turn it into a panic rather than letting the process abort.
             quote_spanned! {span=>
-                #local_name(#(#vars,)* __return.as_mut_ptr());
+                #local_name(#(#vars,)* __return.as_mut_ptr()).panic_on_exception();
             }
         });
         quote_spanned!(span=> __return.assume_init())
@@ -664,7 +664,7 @@ fn expand_cxx_function_shim(efn: &ExternFn, types: &Types) -> TokenStream {
         }
     } else {
         quote_spanned! {span=>
-            #local_name(#(#vars),*)
+            #local_name(#(#vars),*).panic_on_exception()
         }
     };
     let mut expr;
@@ -2011,10 +2011,10 @@ fn expand_return_type(ret: &Option<Type>) -> TokenStream {
     }
 }
 
-fn indirect_return(sig: &Signature, types: &Types) -> bool {
-    sig.ret
-        .as_ref()
-        .is_some_and(|ret| sig.throws || types.needs_indirect_abi(ret))
+// C++ functions always report exceptions through their return value, so any actual
+// return value has to travel through an out parameter.
+fn indirect_return(sig: &Signature) -> bool {
+    sig.ret.is_some()
 }
 
 fn expand_extern_type(ty: &Type, types: &Types, proper: bool) -> TokenStream {
@@ -2094,15 +2094,6 @@ fn expand_extern_type(ty: &Type, types: &Types, proper: bool) -> TokenStream {
         }
         _ => quote!(#ty),
     }
-}
-
-fn expand_extern_return_type(ret: &Option<Type>, types: &Types, proper: bool) -> TokenStream {
-    let ret = match ret {
-        Some(ret) if !types.needs_indirect_abi(ret) => ret,
-        _ => return TokenStream::new(),
-    };
-    let ty = expand_extern_type(ret, types, proper);
-    quote!(-> #ty)
 }
 
 // #UnsafeExtern extern "C" {...}

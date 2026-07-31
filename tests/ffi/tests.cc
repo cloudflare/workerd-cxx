@@ -57,6 +57,10 @@ size_t C::set_succeed(size_t n) { return this->set(n); }
 
 size_t C::get_fail() { throw std::runtime_error("unimplemented"); }
 
+size_t C::get_fail_infallible() {
+  kj::throwFatalException(KJ_EXCEPTION(FAILED, "infallible method failure"));
+}
+
 RcC::RcC(size_t n) : n(n) {}
 
 size_t RcC::get() const { return this->n; }
@@ -816,6 +820,43 @@ size_t c_cancel_roundtrip_return_primitive() {
   return 2020; // Should not reach here
 }
 
+// The functions below throw even though their bridge signature is infallible.
+// Rust cannot report the exception to its caller, so it panics instead. None of
+// them may terminate the process.
+void c_infallible_fail_void() {
+  kj::throwFatalException(KJ_EXCEPTION(FAILED, "infallible void failure"));
+}
+
+size_t c_infallible_fail_primitive() {
+  throw std::logic_error("infallible logic error");
+}
+
+size_t c_infallible_fail_kj_exception_disconnected() {
+  kj::throwFatalException(KJ_EXCEPTION(DISCONNECTED, "infallible disconnect"));
+}
+
+rust::String c_infallible_fail_rust_string() {
+  kj::throwFatalException(KJ_EXCEPTION(FAILED, "infallible string failure"));
+}
+
+// Neither a kj::Exception nor a std::exception. This is the shape of
+// workerd's jsg::JsExceptionThrown, which used to abort the process here.
+namespace {
+struct ForeignException {};
+} // namespace
+
+size_t c_infallible_fail_foreign_exception() { throw ForeignException{}; }
+
+size_t c_infallible_cancel() { throw kj::CanceledException{}; }
+
+// Test C++->Rust->C++ roundtrip of an exception through an infallible bridge
+// function on both sides: the exception becomes a panic in Rust and is rethrown
+// as a kj::Exception when it crosses back into C++.
+size_t c_infallible_fail_roundtrip() {
+  r_call_c_infallible_fail_primitive();
+  return 2020; // Should not reach here
+}
+
 rust::Box<R> c_try_return_box() { return c_return_box(); }
 
 const rust::String &c_try_return_ref(const rust::String &s) { return s; }
@@ -1313,6 +1354,18 @@ extern "C" const char *cxx_run_test() noexcept {
     // Expected: CanceledException should propagate from C++ through Rust back to C++
   } catch (...) {
     KJ_FAIL_ASSERT("Unexpected exception in roundtrip test",
+                   kj::getCaughtExceptionAsKj());
+  }
+
+  // An exception thrown by an infallible C++ function becomes a panic in Rust,
+  // which turns back into a kj::Exception here rather than aborting.
+  try {
+    r_call_c_infallible_fail_primitive();
+    ASSERT(false); // Should not reach here
+  } catch (const kj::Exception &e) {
+    ASSERT(e.getDescription().contains("infallible logic error"));
+  } catch (...) {
+    KJ_FAIL_ASSERT("Unexpected exception in infallible failure test",
                    kj::getCaughtExceptionAsKj());
   }
 

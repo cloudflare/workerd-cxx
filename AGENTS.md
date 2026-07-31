@@ -51,6 +51,14 @@ Async tests require a `kj::EventLoop` and are driven from C++ using `KJ_TEST`, n
 
 FFI declarations live in `#[cxx::bridge]` blocks in `lib.rs` files. The proc macro generates C++ headers (`lib.rs.h`) that C++ code includes. Marking a function `async` in `extern "Rust"` makes it return `kj::Promise<T>` on the C++ side; marking one `async` in `extern "C++"` makes it return `impl Future` on the Rust side.
 
+### Exceptions and panics across the bridge
+
+An exception or panic must never terminate the process, so every generated shim reports failure through its return value (`rust::repr::Result` / `cxx::private::Result`, a tagged `kj::Exception*`) and any actual return value travels through an out parameter:
+
+- `extern "Rust"` functions: a panic is caught (`catch_unwind`/`try_unwind` in `src/unwind.rs`) and rethrown in C++ as a `kj::Exception`.
+- `extern "C++"` functions: the shim catches every exception (`rust::repr::Result::run` in `include/cxx.h`). Signatures declared `-> Result<T>` produce `Err`; infallible signatures panic instead (`Result::panic_on_exception` in `src/result.rs`).
+- `kj::CanceledException` is preserved in both directions as a panic carrying a `cxx::CanceledException` payload.
+
 ### Async FFI (kj-rs/)
 
 The `kj-rs/` directory bridges KJ promises and Rust futures:
