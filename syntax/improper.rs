@@ -38,6 +38,7 @@ impl<'a> Types<'a> {
             | Type::CxxVector(_) => Definite(false),
             Type::Ref(ty) => self.determine_improper_ctype(&ty.inner),
             Type::Ptr(ty) => self.determine_improper_ctype(&ty.inner),
+            Type::NonNull(ty) => self.determine_improper_ctype(&ty.inner),
             Type::Array(ty) => self.determine_improper_ctype(&ty.inner),
             Type::KjMaybe(ty) => self.determine_improper_ctype(&ty.inner),
             Type::Future(_) => {
