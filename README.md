@@ -1,3 +1,5 @@
+*** Archived. Continues its life as https://github.com/cloudflare/workerd/tree/main/src/rust/cxx ***
+
 # Workerd-cxx - C++/Rust interop for Cloudflare Workerd
 
 **This project is a fork of an excellent [cxx](https://crates.io/crates/cxx) crate for
